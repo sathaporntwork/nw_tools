@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Filtering</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polygon points=%2222 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3%22 /></svg>">
+
+  <!-- Preconnect for fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles/common.css">
+
+  <style>
+    /* Page-specific styles for text_filter.html */
+    .container {
+      max-width: 1080px;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .filter-input {
+      min-height: 80px;
+    }
+
+    #inputText {
+      min-height: 200px;
+    }
+
+    #outputText {
+      min-height: 200px;
+    }
+
+    /* Secondary (Copy) Button - Green Gradient */
+    button.secondary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: 1px solid transparent;
+      color: white;
+      box-shadow: 0 4px 15px -3px rgba(16, 185, 129, 0.4);
+    }
+
+    button.secondary:hover {
+      box-shadow: 0 8px 20px -3px rgba(16, 185, 129, 0.5);
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    @media (max-width: 640px) {
+      .filter-row {
+        grid-template-columns: 1fr;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo-icon" style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
+          🔍</div>
+        <h1>Text Filtering</h1>
+        <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="filter-row">
+        <div class="input-group">
+          <label for="wordsToFilter_inc">Include Keywords</label>
+          <textarea class="filter-input" id="wordsToFilter_inc"
+            placeholder="1 keyword per line (lines containing these will be included)" spellcheck="false"></textarea>
+        </div>
+        <div class="input-group">
+          <label for="wordsToFilter_exc">Exclude Keywords</label>
+          <textarea class="filter-input" id="wordsToFilter_exc"
+            placeholder="1 keyword per line (lines containing these will be excluded)" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="inputText">Input Text</label>
+        <textarea id="inputText" placeholder="Paste your text here..." spellcheck="false"></textarea>
+      </div>
+
+      <div class="button-group">
+        <button class="primary action-btn" onclick="filterLines()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+          </svg>
+          Filter Text
+        </button>
+        <button class="secondary action-btn" onclick="copyToClipboard()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          Copy Result
+        </button>
+      </div>
+
+      <div class="input-group">
+        <label for="outputText">Filtered Output</label>
+        <textarea id="outputText" readonly spellcheck="false"
+          placeholder="Filtered result will appear here..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">Action completed!</div>
+
+  <script>
+    function filterLines() {
+      var wordsToFilter_inc = document.getElementById("wordsToFilter_inc").value.split("\n").filter(Boolean);
+      var wordsToFilter_exc = document.getElementById("wordsToFilter_exc").value.split("\n").filter(Boolean);
+      var inputText = document.getElementById("inputText").value;
+
+      var filteredLines_inc = inputText.split("\n").filter(function (line) {
+        return wordsToFilter_inc.some(function (word) {
+          return line.includes(word);
+        });
+      }).join("\n");
+
+      if (filteredLines_inc !== "") {
+        inputText = filteredLines_inc;
+      }
+
+      var filteredLines_exc = inputText.split("\n").filter(function (line) {
+        return !wordsToFilter_exc.some(function (word) {
+          return line.includes(word);
+        });
+      }).join("\n");
+
+      document.getElementById("outputText").value = filteredLines_exc;
+      showToast("Text filtered successfully!");
+    }
+
+    function copyToClipboard() {
+      const outputText = document.getElementById("outputText");
+      if (!outputText.value) {
+        showToast("Nothing to copy!");
+        return;
+      }
+      outputText.select();
+      outputText.setSelectionRange(0, 99999);
+      try {
+        navigator.clipboard.writeText(outputText.value).then(() => {
+          showToast("Copied to clipboard!");
+        }).catch(() => {
+          document.execCommand('copy');
+          showToast("Copied to clipboard!");
+        });
+      } catch (err) {
+        document.execCommand('copy');
+        showToast("Copied to clipboard!");
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.className = "show";
+      setTimeout(() => { toast.className = ""; }, 3000);
+    }
+  </script>
+  <script src="assets/js/theme.js"></script>
+
+  <div class="footer">
+    <p>Modern Network Tools Suite • Built with ❤️ for Network Engineers</p>
+  </div>
+</body>
+
+</html>

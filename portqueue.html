@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Port Queue Check</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><rect x=%222%22 y=%227%22 width=%2220%22 height=%2214%22 rx=%222%22 ry=%222%22 /><path d=%22M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16%22 /></svg>">
+
+  <!-- Preconnect for fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles/common.css" />
+
+  <style>
+    /* Page-specific styles for portqueue.html */
+    .container {
+      max-width: 960px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+    }
+
+    .logo-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .code-hint {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.875rem;
+      color: var(--error-color);
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    #inputText {
+      min-height: 120px;
+    }
+
+    #outputText {
+      min-height: 400px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo-icon" style="display: flex; align-items: center; justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+          </svg>
+        </div>
+        <h1>Port Queue Check</h1>
+        <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="code-hint">disp cur | sec inc port-queue | no</div>
+
+      <div class="input-group">
+        <label for="inputText">Router Configuration</label>
+        <textarea id="inputText" placeholder="Paste router configuration here..." spellcheck="false"></textarea>
+      </div>
+
+      <button class="action-btn" onclick="filterLines()">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+        </svg>
+        Filter Configuration
+      </button>
+
+      <div class="input-group">
+        <label for="outputText">Filtered Output</label>
+        <textarea id="outputText" readonly spellcheck="false"
+          placeholder="Filtered configuration will appear here..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">Action completed!</div>
+
+  <script>
+    // Predefined exclusion list
+    const defaultExclusions = `port-queue be wfq weight 5 outbound
+port-queue af1 wfq weight 15 outbound
+port-queue af2 wfq weight 20 outbound
+port-queue af3 wfq weight 30 outbound
+port-queue af4 wfq weight 30 outbound
+description
+shutdown
+eth-trunk
+dcn
+l2 binding vsi
+qos-profile
+qos default-service-class
+port-mode
+negotiation auto
+carrier
+fec
+trust
+user-queue
+lldp
+speed
+duplex
+#`
+      .split("\n")
+      .filter(Boolean);
+
+    function filterLines() {
+      const inputText = document.getElementById("inputText").value;
+
+      if (!inputText.trim()) {
+        showToast("Please paste router configuration first!");
+        return;
+      }
+
+      const filteredLines = inputText
+        .split("\n")
+        .filter(function (line) {
+          return !defaultExclusions.some(function (word) {
+            return line.includes(word);
+          });
+        })
+        .join("\n");
+
+      document.getElementById("outputText").value = filteredLines;
+      showToast("Configuration filtered successfully!");
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.className = "show";
+      setTimeout(() => {
+        toast.className = "";
+      }, 3000);
+    }
+  </script>
+  <script src="assets/js/theme.js"></script>
+
+  <div class="footer">
+    <p>Modern Network Tools Suite • Built with ❤️ for Network Engineers</p>
+  </div>
+</body>
+
+</html>

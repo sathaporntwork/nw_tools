@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN WAN Finder</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><line x1=%222%22 y1=%2212%22 x2=%2222%22 y2=%2212%22/><path d=%22M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z%22/></svg>">
+
+    <!-- Preconnect for fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/common.css">
+
+    <style>
+        /* Page-specific styles */
+        .container {
+            max-width: 960px;
+        }
+
+        .code-hint {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--error-color);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        #inputText {
+            min-height: 250px;
+        }
+
+        #outputText {
+            min-height: 100px;
+            color: var(--success-color);
+        }
+
+        .verify-section {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .verify-section h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            background: var(--accent-gradient);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+        }
+
+        .verify-section code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--error-color);
+        }
+
+        @media (max-width: 640px) {
+            .code-hint {
+                font-size: 0.75rem;
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path
+                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+                <h1>VPN WAN Finder</h1>
+                <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="code-hint">
+                disp ip int br ip-con | in 192.168.xxx
+            </div>
+
+            <div class="input-group">
+                <label for="inputText">Router Output</label>
+                <textarea id="inputText"
+                    placeholder="Virtual-Ethernet4/0/0.1         192.168.123.1/30    up         up       l3vpn&#10;Virtual-Ethernet4/0/0.2         192.168.123.5/30    up         up       l3vpn&#10;Virtual-Ethernet4/0/0.3         192.168.123.9/30    up         up       l3vpn"
+                    spellcheck="false" oninput="avaiableWANFinder()"></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="outputText">Available WANs</label>
+                <textarea id="outputText" readonly spellcheck="false"
+                    placeholder="Available WAN IPs will appear here..."></textarea>
+            </div>
+
+            <div class="verify-section">
+                <h3>Verify Free IP</h3>
+                <code>disp ip routing vpn _VPN-NAME_ 192.168.xxx.yyy</code>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Action completed!</div>
+
+    <script>
+        function avaiableWANFinder() {
+            const inputText = document.getElementById("inputText").value;
+
+            if (inputText.includes("l3vpn") && inputText.includes("Eth")) {
+                const matches = inputText.match(/\d+\.\d+\.\d+\.(\d+)/g);
+
+                const lastOctets = matches && matches.length > 0
+                    ? matches.map((ip) => parseInt(ip.split(".").pop(), 10))
+                    : [];
+
+                let allWANs = Array.from({ length: 64 }, (_, index) => 1 + index * 4);
+                let avaiableWANs = allWANs.filter((num) => !lastOctets.includes(num));
+                let avaiableWANsStr = avaiableWANs.join(", ");
+
+                if (matches.length == 0) {
+                    document.getElementById("outputText").value = "";
+                } else {
+                    document.getElementById("outputText").value =
+                        "Available WANs: " +
+                        avaiableWANs.length +
+                        " IP(s)\n" +
+                        avaiableWANsStr;
+                }
+            } else {
+                document.getElementById("outputText").value = "";
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = ""; }, 3000);
+        }
+
+    </script>
+
+    <script src="assets/js/theme.js"></script>
+
+    <div class="footer">
+        <p>Modern Network Tools Suite • Built with ❤️ for Network Engineers</p>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Subnet Converter - Convert between subnet mask, CIDR notation, and wildcard mask formats">
+    <title>Subnet Converter</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22><rect x=%222%22 y=%222%22 width=%2220%22 height=%228%22 rx=%222%22/><rect x=%222%22 y=%2214%22 width=%2220%22 height=%228%22 rx=%222%22/><line x1=%226%22 y1=%226%22 x2=%226.01%22 y2=%226%22/><line x1=%226%22 y1=%2218%22 x2=%226.01%22 y2=%2218%22/></svg>">
+
+    <!-- Preconnect for fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/common.css">
+
+    <style>
+        /* Page-specific styles */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Grid layout for conversion sections */
+        .conversion-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Copy Button specific style */
+        .copy-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 15px -3px rgba(16, 185, 129, 0.4);
+        }
+
+        .copy-btn:hover {
+            box-shadow: 0 8px 20px -3px rgba(16, 185, 129, 0.5);
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .conversion-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <div class="header">
+            <div class="logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                    <line x1="6" y1="6" x2="6.01" y2="6" />
+                    <line x1="6" y1="18" x2="6.01" y2="18" />
+                </svg>
+            </div>
+            <h1>Subnet Converter</h1>
+            <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn" aria-label="Toggle theme">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+            </button>
+        </div>
+        <div class="conversion-container">
+            <section class="card" aria-labelledby="subnet-to-cidr-title">
+                <h2 id="subnet-to-cidr-title">Subnet Mask to CIDR</h2>
+                <div class="input-group">
+                    <label for="inputSubnet" class="visually-hidden">Enter subnet masks (one per line)</label>
+                    <textarea id="inputSubnet"
+                        placeholder="Enter network and subnet mask (one per line)&#10;Example:&#10;10.0.0.0 255.255.255.0&#10;192.168.0.0 255.255.0.0"
+                        aria-describedby="subnet-format"></textarea>
+                    <span id="subnet-format" class="info-text">Format: network_ip subnet_mask (e.g., 10.0.0.0
+                        255.255.255.0)</span>
+                </div>
+                <button type="button" id="convertToCIDRBtn" aria-label="Convert subnet masks to CIDR notation">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+                    </svg>
+                    Convert to CIDR
+                </button>
+                <div class="output-group">
+                    <label for="outputCIDR" class="visually-hidden">CIDR notation results</label>
+                    <textarea id="outputCIDR" readonly aria-label="Conversion results in CIDR notation"></textarea>
+                </div>
+                <button type="button" id="copyCIDRBtn" class="copy-btn" aria-label="Copy CIDR results to clipboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy Results
+                </button>
+            </section>
+
+            <section class="card" aria-labelledby="cidr-to-subnet-title">
+                <h2 id="cidr-to-subnet-title">CIDR to Subnet Mask</h2>
+                <div class="input-group">
+                    <label for="inputCIDRSubnet" class="visually-hidden">Enter CIDR notation (one per line)</label>
+                    <textarea id="inputCIDRSubnet"
+                        placeholder="Enter CIDR notation (one per line)&#10;Example:&#10;192.168.1.0/24&#10;10.0.0.0/8"
+                        aria-describedby="cidr-subnet-format"></textarea>
+                    <span id="cidr-subnet-format" class="info-text">Format: x.x.x.x/y (IPv4 address with CIDR
+                        prefix)</span>
+                </div>
+                <button type="button" id="convertToSubnetBtn" aria-label="Convert CIDR notation to subnet masks">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+                    </svg>
+                    Convert to Subnet Mask
+                </button>
+                <div class="output-group">
+                    <label for="outputSubnet" class="visually-hidden">Subnet mask results</label>
+                    <textarea id="outputSubnet" readonly
+                        aria-label="Conversion results in subnet mask format"></textarea>
+                </div>
+                <button type="button" id="copySubnetBtn" class="copy-btn"
+                    aria-label="Copy subnet mask results to clipboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy Results
+                </button>
+            </section>
+
+            <section class="card" aria-labelledby="cidr-to-wildcard-title">
+                <h2 id="cidr-to-wildcard-title">CIDR to Wildcard Mask</h2>
+                <div class="input-group">
+                    <label for="inputCIDRWildcard" class="visually-hidden">Enter CIDR notation (one per line)</label>
+                    <textarea id="inputCIDRWildcard"
+                        placeholder="Enter CIDR notation (one per line)&#10;Example:&#10;192.168.1.0/24&#10;10.0.0.0/8"
+                        aria-describedby="cidr-wildcard-format"></textarea>
+                    <span id="cidr-wildcard-format" class="info-text">Format: x.x.x.x/y (IPv4 address with CIDR
+                        prefix)</span>
+                </div>
+                <button type="button" id="convertToWildcardBtn" aria-label="Convert CIDR notation to wildcard masks">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+                    </svg>
+                    Convert to Wildcard Mask
+                </button>
+                <div class="output-group">
+                    <label for="outputWildcard" class="visually-hidden">Wildcard mask results</label>
+                    <textarea id="outputWildcard" readonly
+                        aria-label="Conversion results in wildcard mask format"></textarea>
+                </div>
+                <button type="button" id="copyWildcardBtn" class="copy-btn"
+                    aria-label="Copy wildcard mask results to clipboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy Results
+                </button>
+                <p class="info-text">Note: Wildcard mask is the inverse of subnet mask (e.g., 255.255.255.0 → 0.0.0.255)
+                </p>
+            </section>
+
+            <section class="card" aria-labelledby="wildcard-to-subnet-title">
+                <h2 id="wildcard-to-subnet-title">Wildcard Mask to Subnet</h2>
+                <div class="input-group">
+                    <label for="inputWildcard" class="visually-hidden">Enter wildcard masks (one per line)</label>
+                    <textarea id="inputWildcard"
+                        placeholder="Enter network and wildcard mask (one per line)&#10;Example:&#10;10.0.0.0 0.0.0.255&#10;192.168.0.0 0.0.255.255"
+                        aria-describedby="wildcard-format"></textarea>
+                    <span id="wildcard-format" class="info-text">Format: network_ip wildcard_mask (e.g., 10.0.0.0
+                        0.0.0.255)</span>
+                </div>
+                <button type="button" id="convertToSubnetFromWildcardBtn"
+                    aria-label="Convert wildcard masks to subnet masks">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+                    </svg>
+                    Convert to Subnet Mask
+                </button>
+                <div class="output-group">
+                    <label for="outputSubnetFromWildcard" class="visually-hidden">Subnet mask results from
+                        wildcard</label>
+                    <textarea id="outputSubnetFromWildcard" readonly
+                        aria-label="Conversion results in subnet mask format"></textarea>
+                </div>
+                <button type="button" id="copySubnetFromWildcardBtn" class="copy-btn"
+                    aria-label="Copy subnet mask results to clipboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy Results
+                </button>
+            </section>
+
+            <section class="card" aria-labelledby="wildcard-to-cidr-title">
+                <h2 id="wildcard-to-cidr-title">Wildcard Mask to CIDR</h2>
+                <div class="input-group">
+                    <label for="inputWildcardCIDR" class="visually-hidden">Enter wildcard masks (one per line)</label>
+                    <textarea id="inputWildcardCIDR"
+                        placeholder="Enter network and wildcard mask (one per line)&#10;Example:&#10;10.0.0.0 0.0.0.255&#10;192.168.0.0 0.0.255.255"
+                        aria-describedby="wildcard-cidr-format"></textarea>
+                    <span id="wildcard-cidr-format" class="info-text">Format: network_ip wildcard_mask (e.g., 10.0.0.0
+                        0.0.0.255)</span>
+                </div>
+                <button type="button" id="convertToCIDRFromWildcardBtn"
+                    aria-label="Convert wildcard masks to CIDR notation">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+                    </svg>
+                    Convert to CIDR
+                </button>
+                <div class="output-group">
+                    <label for="outputCIDRFromWildcard" class="visually-hidden">CIDR results from wildcard</label>
+                    <textarea id="outputCIDRFromWildcard" readonly
+                        aria-label="Conversion results in CIDR notation"></textarea>
+                </div>
+                <button type="button" id="copyCIDRFromWildcardBtn" class="copy-btn"
+                    aria-label="Copy CIDR results to clipboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy Results
+                </button>
+            </section>
+        </div>
+    </main>
+
+    <script src="assets/js/ip-utils.js"></script>
+    <script>
+        // Input Validation Helper
+        const InputValidator = {
+            validateSubnetInput: (line) => {
+                const normalizedLine = line.trim().replace(/\s+/g, ' ');
+                const parts = normalizedLine.split(' ');
+                if (parts.length !== 2) return false;
+                const [network, mask] = parts;
+                return IPUtils.isValidIPv4(network) && IPUtils.isValidSubnetMask(mask);
+            },
+
+            validateWildcardInput: (line) => {
+                const normalizedLine = line.trim().replace(/\s+/g, ' ');
+                const parts = normalizedLine.split(' ');
+                if (parts.length !== 2) return false;
+                const [network, mask] = parts;
+                return IPUtils.isValidIPv4(network) && IPUtils.isValidWildcardMask(mask);
+            },
+
+            validateInput: (input, type) => {
+                const lines = input.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                const errors = [];
+                lines.forEach((line, index) => {
+                    const lineNum = index + 1;
+                    if (type === 'cidr' && !IPUtils.isValidCIDR(line)) {
+                        errors.push(`Line ${lineNum}: Invalid CIDR notation`);
+                    } else if (type === 'subnet' && !InputValidator.validateSubnetInput(line)) {
+                        errors.push(`Line ${lineNum}: Invalid network and subnet mask format`);
+                    } else if (type === 'wildcard' && !InputValidator.validateWildcardInput(line)) {
+                        errors.push(`Line ${lineNum}: Invalid network and wildcard mask format`);
+                    }
+                });
+                return { isValid: errors.length === 0, errors, lines };
+            }
+        };
+
+        // UI Controller
+        class UIController {
+            constructor() {
+                this.inputSubnet = document.getElementById('inputSubnet');
+                this.inputCIDRSubnet = document.getElementById('inputCIDRSubnet');
+                this.inputCIDRWildcard = document.getElementById('inputCIDRWildcard');
+                this.inputWildcard = document.getElementById('inputWildcard');
+                this.inputWildcardCIDR = document.getElementById('inputWildcardCIDR');
+                this.outputCIDR = document.getElementById('outputCIDR');
+                this.outputSubnet = document.getElementById('outputSubnet');
+                this.outputWildcard = document.getElementById('outputWildcard');
+                this.outputSubnetFromWildcard = document.getElementById('outputSubnetFromWildcard');
+                this.outputCIDRFromWildcard = document.getElementById('outputCIDRFromWildcard');
+                this.convertToCIDRBtn = document.getElementById('convertToCIDRBtn');
+                this.convertToSubnetBtn = document.getElementById('convertToSubnetBtn');
+                this.convertToWildcardBtn = document.getElementById('convertToWildcardBtn');
+                this.convertToSubnetFromWildcardBtn = document.getElementById('convertToSubnetFromWildcardBtn');
+                this.convertToCIDRFromWildcardBtn = document.getElementById('convertToCIDRFromWildcardBtn');
+                this.copyCIDRBtn = document.getElementById('copyCIDRBtn');
+                this.copySubnetBtn = document.getElementById('copySubnetBtn');
+                this.copyWildcardBtn = document.getElementById('copyWildcardBtn');
+                this.copySubnetFromWildcardBtn = document.getElementById('copySubnetFromWildcardBtn');
+                this.copyCIDRFromWildcardBtn = document.getElementById('copyCIDRFromWildcardBtn');
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                this.convertToCIDRBtn.addEventListener('click', () => this.convertToCIDR());
+                this.convertToSubnetBtn.addEventListener('click', () => this.convertToSubnet());
+                this.convertToWildcardBtn.addEventListener('click', () => this.convertToWildcard());
+                this.convertToSubnetFromWildcardBtn.addEventListener('click', () => this.convertToSubnetFromWildcard());
+                this.convertToCIDRFromWildcardBtn.addEventListener('click', () => this.convertToCIDRFromWildcard());
+                this.copyCIDRBtn.addEventListener('click', () => this.copyToClipboard(this.outputCIDR));
+                this.copySubnetBtn.addEventListener('click', () => this.copyToClipboard(this.outputSubnet));
+                this.copyWildcardBtn.addEventListener('click', () => this.copyToClipboard(this.outputWildcard));
+                this.copySubnetFromWildcardBtn.addEventListener('click', () => this.copyToClipboard(this.outputSubnetFromWildcard));
+                this.copyCIDRFromWildcardBtn.addEventListener('click', () => this.copyToClipboard(this.outputCIDRFromWildcard));
+                this.inputSubnet.addEventListener('input', () => this.validateInput(this.inputSubnet, 'subnet'));
+                this.inputCIDRSubnet.addEventListener('input', () => this.validateInput(this.inputCIDRSubnet, 'cidr'));
+                this.inputCIDRWildcard.addEventListener('input', () => this.validateInput(this.inputCIDRWildcard, 'cidr'));
+                this.inputWildcard.addEventListener('input', () => this.validateInput(this.inputWildcard, 'wildcard'));
+                this.inputWildcardCIDR.addEventListener('input', () => this.validateInput(this.inputWildcardCIDR, 'wildcard'));
+            }
+
+            validateInput(inputElement, type) {
+                const result = InputValidator.validateInput(inputElement.value, type);
+                inputElement.classList.toggle('invalid', !result.isValid);
+                return result;
+            }
+
+            async copyToClipboard(element) {
+                try {
+                    await navigator.clipboard.writeText(element.value);
+                    const button = element.nextElementSibling;
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => button.textContent = originalText, 2000);
+                } catch (err) {
+                    console.error('Failed to copy text:', err);
+                }
+            }
+
+            convertToCIDR() {
+                const validation = this.validateInput(this.inputSubnet, 'subnet');
+                if (!validation.isValid) {
+                    this.outputCIDR.value = validation.errors.join('\n');
+                    return;
+                }
+                const results = validation.lines.map(line => {
+                    const [network, mask] = line.split(' ');
+                    const prefix = IPUtils.netmaskToCIDR(mask);
+                    return `${network}/${prefix}`;
+                });
+                this.outputCIDR.value = results.join('\n');
+            }
+
+            convertToSubnet() {
+                const validation = this.validateInput(this.inputCIDRSubnet, 'cidr');
+                if (!validation.isValid) {
+                    this.outputSubnet.value = validation.errors.join('\n');
+                    return;
+                }
+                const results = validation.lines.map(cidr => {
+                    const [ip, prefix] = cidr.split('/');
+                    const mask = IPUtils.cidrToNetmask(parseInt(prefix, 10));
+                    return `${ip} ${mask}`;
+                });
+                this.outputSubnet.value = results.join('\n');
+            }
+
+            convertToWildcard() {
+                const validation = this.validateInput(this.inputCIDRWildcard, 'cidr');
+                if (!validation.isValid) {
+                    this.outputWildcard.value = validation.errors.join('\n');
+                    return;
+                }
+                const results = validation.lines.map(cidr => {
+                    const [ip, prefix] = cidr.split('/');
+                    const wildcard = IPUtils.cidrToWildcard(parseInt(prefix, 10));
+                    return `${ip} ${wildcard}`;
+                });
+                this.outputWildcard.value = results.join('\n');
+            }
+
+            convertToSubnetFromWildcard() {
+                const validation = this.validateInput(this.inputWildcard, 'wildcard');
+                if (!validation.isValid) {
+                    this.outputSubnetFromWildcard.value = validation.errors.join('\n');
+                    return;
+                }
+                const results = validation.lines.map(line => {
+                    const [network, wildcard] = line.split(' ');
+                    const mask = IPUtils.wildcardToNetmask(wildcard);
+                    return `${network} ${mask}`;
+                });
+                this.outputSubnetFromWildcard.value = results.join('\n');
+            }
+
+            convertToCIDRFromWildcard() {
+                const validation = this.validateInput(this.inputWildcardCIDR, 'wildcard');
+                if (!validation.isValid) {
+                    this.outputCIDRFromWildcard.value = validation.errors.join('\n');
+                    return;
+                }
+                const results = validation.lines.map(line => {
+                    const [network, wildcard] = line.split(' ');
+                    const mask = IPUtils.wildcardToNetmask(wildcard);
+                    const prefix = IPUtils.netmaskToCIDR(mask);
+                    return `${network}/${prefix}`;
+                });
+                this.outputCIDRFromWildcard.value = results.join('\n');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new UIController();
+        });
+    </script>
+
+    <script src="assets/js/theme.js"></script>
+
+    <div class="footer">
+        <p>Modern Network Tools Suite • Built with ❤️ for Network Engineers</p>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Modern, efficient IPv4/IPv6 subnet calculator.">
+    <meta name="keywords" content="subnet, calculator, ip, ipv4, ipv6, cidr, netmask">
+    <title>Subnet Calculator</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22><rect x=%224%22 y=%222%22 width=%2216%22 height=%2220%22 rx=%222%22 ry=%222%22/><line x1=%228%22 y1=%226%22 x2=%2216%22 y2=%226%22/><line x1=%228%22 y1=%2210%22 x2=%2216%22 y2=%2210%22/><line x1=%228%22 y1=%2214%22 x2=%2216%22 y2=%2214%22/><line x1=%228%22 y1=%2218%22 x2=%2210%22 y2=%2218%22/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/common.css">
+
+    <style>
+        /* Page-specific styles */
+        .nav-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .nav-buttons.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .nav-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--accent-primary);
+            box-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            padding: 0.6rem;
+            text-transform: none;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+
+        .nav-btn svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        #prev-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        #next-btn:hover svg {
+            transform: translateX(3px);
+        }
+
+        @media (max-width: 640px) {
+            .nav-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .input-group label {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                    <line x1="8" y1="6" x2="16" y2="6" />
+                    <line x1="8" y1="10" x2="16" y2="10" />
+                    <line x1="8" y1="14" x2="16" y2="14" />
+                    <line x1="8" y1="18" x2="10" y2="18" />
+                </svg>
+                <h1>Subnet Calculator</h1>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="input-group">
+                <label for="ip-input">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path
+                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    </svg>
+                    IP Address / CIDR
+                </label>
+                <input type="text" id="ip-input" placeholder="e.g. 192.168.1.1/24 or 2001:db8::/32" autocomplete="off">
+                <div id="error-message" class="error-message"></div>
+            </div>
+
+            <button id="calculate-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                    <line x1="8" y1="6" x2="16" y2="6" />
+                    <line x1="8" y1="10" x2="16" y2="10" />
+                    <line x1="8" y1="14" x2="16" y2="14" />
+                    <line x1="8" y1="18" x2="10" y2="18" />
+                </svg>
+                Calculate
+            </button>
+
+            <div id="results" class="results"></div>
+
+            <div id="nav-buttons" class="nav-buttons hidden">
+                <button id="prev-btn" class="nav-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    Previous
+                </button>
+                <button id="next-btn" class="nav-btn">
+                    Next
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/ip-utils.js"></script>
+    <script>
+        class SubnetCalculator {
+            constructor() {
+                this.input = document.getElementById('ip-input');
+                this.calculateBtn = document.getElementById('calculate-btn');
+                this.resultsContainer = document.getElementById('results');
+                this.errorContainer = document.getElementById('error-message');
+                this.navButtonsContainer = document.getElementById('nav-buttons');
+                this.prevBtn = document.getElementById('prev-btn');
+                this.nextBtn = document.getElementById('next-btn');
+                this.themeToggle = document.getElementById('theme-toggle');
+
+                this.calculateBtn.addEventListener('click', () => this.calculate());
+                this.input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.calculate();
+                });
+
+                this.prevBtn.addEventListener('click', () => this.moveNetwork(-1));
+                this.nextBtn.addEventListener('click', () => this.moveNetwork(1));
+                this.themeToggle.addEventListener('click', () => ThemeManager.toggle());
+
+                this.currentIP = null;
+                this.currentCIDR = null;
+                this.currentType = null;
+            }
+
+            calculate() {
+                this.clearError();
+                this.resultsContainer.classList.remove('visible');
+                this.navButtonsContainer.classList.remove('visible');
+
+                const inputVal = this.input.value.trim();
+                if (!inputVal) {
+                    this.showError('Please enter an IP address and Netmask (e.g., 192.168.1.1/24)');
+                    return;
+                }
+
+                const type = this.getIPType(inputVal);
+
+                if (type === 'IPv4') {
+                    this.calculateIPv4(inputVal);
+                } else if (type === 'IPv6') {
+                    this.calculateIPv6(inputVal);
+                } else {
+                    this.showError('Invalid IP address format.');
+                }
+            }
+
+            getIPType(input) {
+                if (input.includes('.')) return 'IPv4';
+                if (input.includes(':')) return 'IPv6';
+                return 'Invalid';
+            }
+
+            calculateIPv4(input) {
+                try {
+                    let [ip, mask] = input.split('/');
+
+                    if (!IPUtils.isValidIPv4(ip)) {
+                        this.showError('Invalid IPv4 address.');
+                        return;
+                    }
+
+                    let cidr = 0;
+                    if (!mask) {
+                        this.showError('Please provide a Netmask or CIDR (e.g., /24)');
+                        return;
+                    }
+
+                    if (mask.includes('.')) {
+                        cidr = IPUtils.netmaskToCIDR(mask);
+                        if (cidr === -1) {
+                            this.showError('Invalid Netmask.');
+                            return;
+                        }
+                    } else {
+                        cidr = parseInt(mask, 10);
+                    }
+
+                    if (isNaN(cidr) || cidr < 0 || cidr > 32) {
+                        this.showError('Invalid CIDR (0-32).');
+                        return;
+                    }
+
+                    const ipNum = IPUtils.ipToLong(ip);
+                    const maskNum = -1 << (32 - cidr);
+                    const networkNum = ipNum & maskNum;
+                    const broadcastNum = networkNum | (~maskNum);
+
+                    const totalHosts = Math.pow(2, 32 - cidr);
+                    const usableHosts = cidr >= 31 ? 0 : totalHosts - 2;
+
+                    const firstUsableNum = cidr >= 31 ? 0 : networkNum + 1;
+                    const lastUsableNum = cidr >= 31 ? 0 : broadcastNum - 1;
+
+                    const results = {
+                        'IP Address': ip,
+                        'Netmask': IPUtils.cidrToNetmask(cidr),
+                        'Wildcard Mask': IPUtils.cidrToWildcard(cidr),
+                        'CIDR Notation': `/${cidr}`,
+                        'Network Address': IPUtils.longToIP(networkNum),
+                        'Broadcast Address': IPUtils.longToIP(broadcastNum),
+                        'Usable Host Range': cidr >= 31 ? 'N/A' : `${IPUtils.longToIP(firstUsableNum)} - ${IPUtils.longToIP(lastUsableNum)}`,
+                        'Total Hosts': totalHosts.toLocaleString(),
+                        'Usable Hosts': usableHosts.toLocaleString(),
+                        'Binary Netmask': IPUtils.toBinary(maskNum),
+                        'IP Class': IPUtils.getIPClass(ipNum)
+                    };
+
+                    this.displayResults(results);
+
+                    this.currentIP = networkNum;
+                    this.currentCIDR = cidr;
+                    this.currentType = 'IPv4';
+                    this.navButtonsContainer.classList.add('visible');
+
+                } catch (e) {
+                    console.error(e);
+                    this.showError('An error occurred during calculation.');
+                }
+            }
+
+            calculateIPv6(input) {
+                try {
+                    let [ip, prefix] = input.split('/');
+
+                    if (!this.validateIPv6(ip)) {
+                        this.showError('Invalid IPv6 address.');
+                        return;
+                    }
+
+                    if (!prefix) prefix = 128;
+                    const prefixLen = parseInt(prefix, 10);
+
+                    if (isNaN(prefixLen) || prefixLen < 0 || prefixLen > 128) {
+                        this.showError('Invalid Prefix Length (0-128).');
+                        return;
+                    }
+
+                    const expanded = this.expandIPv6(ip);
+                    const compressed = this.compressIPv6(expanded);
+
+                    const networkAddr = this.getIPv6Network(expanded, prefixLen);
+                    const networkCompressed = this.compressIPv6(networkAddr);
+
+                    const results = {
+                        'Expanded Address': expanded,
+                        'Compressed Address': compressed,
+                        'Network Address': networkCompressed,
+                        'Prefix Length': `/${prefixLen}`,
+                        'Total Hosts': prefixLen === 128 ? '1' : `2^${128 - prefixLen}`,
+                    };
+
+                    this.displayResults(results);
+
+                    this.currentIP = networkAddr;
+                    this.currentCIDR = prefixLen;
+                    this.currentType = 'IPv6';
+                    this.navButtonsContainer.classList.add('visible');
+
+                } catch (e) {
+                    console.error(e);
+                    this.showError('An error occurred during IPv6 calculation.');
+                }
+            }
+
+            moveNetwork(direction) {
+                if (this.currentCIDR === null) return;
+
+                if (this.currentType === 'IPv4') {
+                    const increment = Math.pow(2, 32 - this.currentCIDR);
+                    let newNetwork = (this.currentIP + (direction * increment)) >>> 0;
+                    const newIPStr = IPUtils.longToIP(newNetwork);
+                    const newInput = `${newIPStr}/${this.currentCIDR}`;
+                    this.input.value = newInput;
+                    this.calculate();
+                } else if (this.currentType === 'IPv6') {
+                    const currentBigInt = this.ipv6ToBigInt(this.currentIP);
+                    const increment = BigInt(2) ** BigInt(128 - this.currentCIDR);
+                    const newNetwork = currentBigInt + (BigInt(direction) * increment);
+                    const newIPStr = this.bigIntToIPv6(newNetwork);
+                    const compressed = this.compressIPv6(newIPStr);
+                    const newInput = `${compressed}/${this.currentCIDR}`;
+                    this.input.value = newInput;
+                    this.calculate();
+                }
+            }
+
+            validateIPv6(ip) {
+                const ipv6Pattern = /^((?=.*::)(?!.*::.+::)(::)?([\dA-F]{1,4}:(:|\\b)|){5}|([\dA-F]{1,4}:){6})((([\\dA-F]{1,4}((?!\\3)::|:\\b|$))|(?!\\2\\3)){2}|(((2[0-4]|1\\d|[1-9])?\\d|25[0-5])\\.?\\b){4})$/i;
+                return ipv6Pattern.test(ip);
+            }
+
+            expandIPv6(ip) {
+                let fullAddress = "";
+                const parts = ip.split(':');
+                let doubleColonIndex = ip.indexOf('::');
+
+                if (doubleColonIndex !== -1) {
+                    const leftSide = ip.substring(0, doubleColonIndex).split(':').filter(Boolean);
+                    const rightSide = ip.substring(doubleColonIndex + 2).split(':').filter(Boolean);
+                    const missing = 8 - (leftSide.length + rightSide.length);
+                    const zeros = Array(missing).fill('0000');
+                    const allParts = [...leftSide, ...zeros, ...rightSide];
+
+                    fullAddress = allParts.map(p => p.padStart(4, '0')).join(':');
+                } else {
+                    fullAddress = parts.map(p => p.padStart(4, '0')).join(':');
+                }
+                return fullAddress.toUpperCase();
+            }
+
+            compressIPv6(ip) {
+                return ip.replace(/\\b0+(\\d)/g, '$1').replace(/(^|:)0(:0)*:0(:|$)/, '$1::$3').replace(/:{3,}/g, '::');
+            }
+
+            ipv6ToBigInt(ipv6) {
+                const parts = ipv6.split(':');
+                let bigInt = BigInt(0);
+                for (let i = 0; i < parts.length; i++) {
+                    bigInt = (bigInt << BigInt(16)) + BigInt(parseInt(parts[i], 16));
+                }
+                return bigInt;
+            }
+
+            bigIntToIPv6(bigInt) {
+                const parts = [];
+                let num = bigInt;
+                for (let i = 0; i < 8; i++) {
+                    parts.unshift((num & BigInt(0xFFFF)).toString(16).toUpperCase().padStart(4, '0'));
+                    num = num >> BigInt(16);
+                }
+                return parts.join(':');
+            }
+
+            getIPv6Network(ipv6, prefixLen) {
+                const ipBigInt = this.ipv6ToBigInt(ipv6);
+                const mask = (BigInt(2) ** BigInt(128) - BigInt(1)) << BigInt(128 - prefixLen);
+                const networkBigInt = ipBigInt & mask;
+                return this.bigIntToIPv6(networkBigInt);
+            }
+
+            displayResults(data) {
+                this.resultsContainer.innerHTML = '';
+
+                let index = 0;
+                for (const [key, value] of Object.entries(data)) {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    item.style.animationDelay = `${index * 0.05}s`;
+                    item.innerHTML = `
+                        <span class="result-label">${key}</span>
+                        <span class="result-value">${value}</span>
+                    `;
+                    this.resultsContainer.appendChild(item);
+                    index++;
+                }
+
+                this.resultsContainer.classList.add('visible');
+            }
+
+            showError(msg) {
+                this.errorContainer.textContent = msg;
+            }
+
+            clearError() {
+                this.errorContainer.textContent = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new SubnetCalculator();
+        });
+    </script>
+
+    <script src="assets/js/theme.js"></script>
+
+    <div class="footer">
+        <p>Modern Network Tools Suite • Built with ❤️ for Network Engineers</p>
+    </div>
+</body>
+
+</html>
