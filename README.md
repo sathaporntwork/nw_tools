@@ -42,6 +42,12 @@ A professional, modern, and responsive suite of networking utilities designed fo
 8.  **Script Generator**
     *   Generate configuration scripts for network devices.
 
+9.  **Configuration Compare**
+    *   Compare two text configurations side-by-side with intelligent difference highlighting.
+    *   Features advanced navigation (Previous/Next diff buttons with jump-to capability).
+    *   Compact mode to show only differences while retaining context.
+    *   Visual diff highlighting with line numbers and toast notifications.
+
 ## 📦 Project Structure
 
 ```text
@@ -60,7 +66,8 @@ tools/
 ├── wan.html
 ├── text_filter.html
 ├── script.html
-└── portqueue.html
+├── portqueue.html
+└── compare.html
 ```
 
 ## 🚀 Deployment
