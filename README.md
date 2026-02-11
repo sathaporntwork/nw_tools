@@ -2,8 +2,6 @@
 
 A professional, modern, and responsive suite of networking utilities designed for network engineers and system administrators. This project features a centralized architecture with a consistent UI/UX, dark/light mode support, and purely client-side execution for security and speed.
 
-![Network Tools Suite Dashboard](assets/images/screenshot.png)
-
 ## 🚀 Features
 
 *   **Centralized Architecture**: Shared CSS and JavaScript resources for consistent styling and behavior across all tools.
@@ -48,6 +46,10 @@ A professional, modern, and responsive suite of networking utilities designed fo
     *   Compact mode to show only differences while retaining context.
     *   Visual diff highlighting with line numbers and toast notifications.
 
+10. **Ping Parser**
+    *   Parse Windows/Linux ping results to extract IP and Loss %.
+    *   Support mixed output formats.
+
 ## 📦 Project Structure
 
 ```text
@@ -67,7 +69,8 @@ tools/
 ├── text_filter.html
 ├── script.html
 ├── portqueue.html
-└── compare.html
+├── compare.html
+└── ping_result.html
 ```
 
 ## 🚀 Deployment

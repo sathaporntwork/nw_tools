@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Result Parser</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%2222 12 18 12 15 21 9 3 6 12 2 12%22 /></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/common.css">
+
+    <style>
+        .container {
+            max-width: 1080px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        #inputText,
+        #outputText {
+            min-height: 250px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Secondary (Copy) Button - Green Gradient */
+        button.secondary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: 1px solid transparent;
+            color: white;
+            box-shadow: 0 4px 15px -3px rgba(16, 185, 129, 0.4);
+        }
+
+        button.secondary:hover {
+            box-shadow: 0 8px 20px -3px rgba(16, 185, 129, 0.5);
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        @media (max-width: 640px) {
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="logo-icon"
+                    style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
+                    ⚡</div>
+                <h1>Ping Result Parser</h1>
+                <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="input-group">
+                <label for="inputText">Paste Ping Results (Windows or Linux)</label>
+                <textarea id="inputText" placeholder="Paste your ping output here...
+Example:
+64 bytes from 8.8.8.8: icmp_seq=1 ttl=115 time=1.44 ms
+--- 8.8.8.8 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss...
+
+Or:
+Ping statistics for 8.8.8.8:
+    Packets: Sent = 1, Received = 1, Lost = 0 (0% loss)..." spellcheck="false"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="primary action-btn" onclick="parsePingresults()">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    Parse Results
+                </button>
+                <button class="secondary action-btn" onclick="copyToClipboard()">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy Output
+                </button>
+                <button class="action-btn" onclick="clearAll()"
+                    style="background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    </svg>
+                    Clear
+                </button>
+            </div>
+
+            <div class="input-group">
+                <label for="outputText">Parsed Output (IP Loss%)</label>
+                <textarea id="outputText" readonly spellcheck="false"
+                    placeholder="Results will appear here..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Action completed!</div>
+
+    <script>
+        function parsePingresults() {
+            const inputText = document.getElementById("inputText").value;
+            const results = [];
+
+            // We need to handle mixed content. We can split by lines and look for context, 
+            // BUT a global regex search is often robust enough if the patterns are distinct.
+
+            // Linux Pattern:
+            // --- 8.8.8.8 ping statistics ---
+            // ... 0% packet loss ...
+            const linuxRegex = /--- (\d+\.\d+\.\d+\.\d+) ping statistics ---\s+[\s\S]*?(\d+)% packet loss/g;
+
+            // Windows Pattern:
+            // Ping statistics for 8.8.8.8:
+            // ... (0% loss)
+            const windowsRegex = /Ping statistics for (\d+\.\d+\.\d+\.\d+):[\s\S]*?\((\d+)% loss\)/g;
+
+            // Copy keys to avoid infinite loops if we were modifying, but we aren't.
+
+            let match;
+
+            // Since JS regex stateful with 'g', we can just loop.
+            // CAUTION: If the text is huge and mixed, order might be lost if we do two passes.
+            // But usually users paste a block.
+            // Let's combine them or use a tailored approach. 
+            // A combined regex might be tricky with capture groups.
+            // Let's use a tokenizer approach or just two passes. Two passes is fine.
+            // Wait, if I paste Linux then Windows, and I run Windows regex first, it won't care about the Linux part.
+            // The only issue is output order. 
+            // If I want to preserve order, I should find all matches with index and sort.
+
+            const allMatches = [];
+
+            // Find Linux matches
+            while ((match = linuxRegex.exec(inputText)) !== null) {
+                allMatches.push({
+                    index: match.index,
+                    ip: match[1],
+                    loss: match[2]
+                });
+            }
+
+            // Find Windows matches
+            while ((match = windowsRegex.exec(inputText)) !== null) {
+                allMatches.push({
+                    index: match.index,
+                    ip: match[1],
+                    loss: match[2]
+                });
+            }
+
+            // Sort by position in text
+            allMatches.sort((a, b) => a.index - b.index);
+
+            // Format output
+            const outputString = allMatches.map(item => `${item.ip} ${item.loss}%`).join("\n");
+
+            if (allMatches.length === 0 && inputText.trim().length > 0) {
+                showToast("No ping statistics found!");
+            } else if (allMatches.length > 0) {
+                showToast("Parsed " + allMatches.length + " results!");
+            }
+
+            document.getElementById("outputText").value = outputString;
+        }
+
+        function copyToClipboard() {
+            const outputText = document.getElementById("outputText");
+            if (!outputText.value) {
+                showToast("Nothing to copy!");
+                return;
+            }
+            outputText.select();
+            outputText.setSelectionRange(0, 99999);
+
+            try {
+                navigator.clipboard.writeText(outputText.value).then(() => {
+                    showToast("Copied to clipboard!");
+                }).catch(() => {
+                    document.execCommand('copy');
+                    showToast("Copied to clipboard!");
+                });
+            } catch (err) {
+                document.execCommand('copy');
+                showToast("Copied to clipboard!");
+            }
+        }
+
+        function clearAll() {
+            document.getElementById("inputText").value = "";
+            document.getElementById("outputText").value = "";
+            document.getElementById("inputText").focus();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = ""; }, 3000);
+        }
+    </script>
+    <script src="assets/js/theme.js"></script>
+
+    <div class="footer">
+        <p>Modern Network Tools Suite • Built with ❤️ for Network Engineers</p>
+    </div>
+</body>
+
+</html>
