@@ -50,6 +50,12 @@ A professional, modern, and responsive suite of networking utilities designed fo
     *   Parse Windows/Linux ping results to extract IP and Loss %.
     *   Support mixed output formats.
 
+11. **BNG GW Ping/Traceroute**
+    *   Paste BNG device output to auto-detect the device node number and select matching odd/even gateway IP pools.
+    *   Generates `ping` or `tracert` commands per matched pool.
+    *   Supports GW IP filtering: All, Private IP (RFC1918 + CGNAT), or Public IP.
+    *   Run Mode selector: Trace (default) or Ping.
+
 ## 📦 Project Structure
 
 ```text
@@ -70,7 +76,8 @@ tools/
 ├── script.html
 ├── portqueue.html
 ├── compare.html
-└── ping_result.html
+├── ping_result.html
+└── bng_gw_pingtrace.html
 ```
 
 ## 🚀 Deployment
