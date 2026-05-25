@@ -283,7 +283,8 @@
                 try {
                     let [ip, prefix] = input.split('/');
 
-                    if (!this.validateIPv6(ip)) {
+                    const expanded = IPUtils.expandIPv6(ip);
+                    if (!expanded) {
                         this.showError('Invalid IPv6 address.');
                         return;
                     }
@@ -296,11 +297,10 @@
                         return;
                     }
 
-                    const expanded = this.expandIPv6(ip);
-                    const compressed = this.compressIPv6(expanded);
+                    const compressed = IPUtils.compressIPv6(expanded);
 
                     const networkAddr = this.getIPv6Network(expanded, prefixLen);
-                    const networkCompressed = this.compressIPv6(networkAddr);
+                    const networkCompressed = IPUtils.compressIPv6(networkAddr);
 
                     const results = {
                         'Expanded Address': expanded,
@@ -338,39 +338,11 @@
                     const increment = BigInt(2) ** BigInt(128 - this.currentCIDR);
                     const newNetwork = currentBigInt + (BigInt(direction) * increment);
                     const newIPStr = this.bigIntToIPv6(newNetwork);
-                    const compressed = this.compressIPv6(newIPStr);
+                    const compressed = IPUtils.compressIPv6(newIPStr);
                     const newInput = `${compressed}/${this.currentCIDR}`;
                     this.input.value = newInput;
                     this.calculate();
                 }
-            }
-
-            validateIPv6(ip) {
-                const ipv6Pattern = /^((?=.*::)(?!.*::.+::)(::)?([\dA-F]{1,4}:(:|\\b)|){5}|([\dA-F]{1,4}:){6})((([\\dA-F]{1,4}((?!\\3)::|:\\b|$))|(?!\\2\\3)){2}|(((2[0-4]|1\\d|[1-9])?\\d|25[0-5])\\.?\\b){4})$/i;
-                return ipv6Pattern.test(ip);
-            }
-
-            expandIPv6(ip) {
-                let fullAddress = "";
-                const parts = ip.split(':');
-                let doubleColonIndex = ip.indexOf('::');
-
-                if (doubleColonIndex !== -1) {
-                    const leftSide = ip.substring(0, doubleColonIndex).split(':').filter(Boolean);
-                    const rightSide = ip.substring(doubleColonIndex + 2).split(':').filter(Boolean);
-                    const missing = 8 - (leftSide.length + rightSide.length);
-                    const zeros = Array(missing).fill('0000');
-                    const allParts = [...leftSide, ...zeros, ...rightSide];
-
-                    fullAddress = allParts.map(p => p.padStart(4, '0')).join(':');
-                } else {
-                    fullAddress = parts.map(p => p.padStart(4, '0')).join(':');
-                }
-                return fullAddress.toUpperCase();
-            }
-
-            compressIPv6(ip) {
-                return ip.replace(/\\b0+(\\d)/g, '$1').replace(/(^|:)0(:0)*:0(:|$)/, '$1::$3').replace(/:{3,}/g, '::');
             }
 
             ipv6ToBigInt(ipv6) {

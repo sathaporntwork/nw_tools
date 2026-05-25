@@ -100,6 +100,106 @@ const IPUtils = {
     },
 
     /**
+     * Parse an IPv6 address into 8 normalized hextets
+     * @param {string} ip - IPv6 address in full or compact form
+     * @returns {string[] | null} - Array of 8 uppercase 4-char hextets or null when invalid
+     */
+    parseIPv6(ip) {
+        if (typeof ip !== 'string') return null;
+
+        const normalizedIp = ip.trim();
+        if (!normalizedIp || normalizedIp.includes('.')) return null;
+
+        const segments = normalizedIp.split('::');
+        if (segments.length > 2) return null;
+
+        const hasCompression = segments.length === 2;
+        const [leftRaw = '', rightRaw = ''] = segments;
+        const left = leftRaw ? leftRaw.split(':') : [];
+        const right = rightRaw ? rightRaw.split(':') : [];
+        const hextetPattern = /^[0-9a-fA-F]{1,4}$/;
+
+        if (![...left, ...right].every(part => hextetPattern.test(part))) {
+            return null;
+        }
+
+        const totalParts = left.length + right.length;
+        if ((!hasCompression && totalParts !== 8) || (hasCompression && totalParts >= 8)) {
+            return null;
+        }
+
+        const missingParts = hasCompression ? 8 - totalParts : 0;
+        const expanded = [
+            ...left,
+            ...Array(missingParts).fill('0'),
+            ...right
+        ];
+
+        return expanded.map(part => part.toUpperCase().padStart(4, '0'));
+    },
+
+    /**
+     * Validate IPv6 address
+     * @param {string} ip - IPv6 address to validate
+     * @returns {boolean} - True if valid IPv6
+     */
+    isValidIPv6(ip) {
+        return this.parseIPv6(ip) !== null;
+    },
+
+    /**
+     * Expand IPv6 address to 8 hextets
+     * @param {string} ip - IPv6 address
+     * @returns {string | null} - Expanded IPv6 address or null when invalid
+     */
+    expandIPv6(ip) {
+        const parts = this.parseIPv6(ip);
+        return parts ? parts.join(':') : null;
+    },
+
+    /**
+     * Compress IPv6 address using :: notation for the longest zero run
+     * @param {string} ip - IPv6 address in full or compact form
+     * @returns {string | null} - Compressed IPv6 address or null when invalid
+     */
+    compressIPv6(ip) {
+        const parts = this.parseIPv6(ip);
+        if (!parts) return null;
+
+        const shortened = parts.map(part => part.replace(/^0+([0-9A-F]{1,3})$/i, '$1').replace(/^0+$/, '0'));
+        let bestStart = -1;
+        let bestLength = 0;
+        let currentStart = -1;
+        let currentLength = 0;
+
+        for (let i = 0; i < shortened.length; i++) {
+            if (shortened[i] === '0') {
+                if (currentStart === -1) currentStart = i;
+                currentLength++;
+                if (currentLength > bestLength) {
+                    bestStart = currentStart;
+                    bestLength = currentLength;
+                }
+            } else {
+                currentStart = -1;
+                currentLength = 0;
+            }
+        }
+
+        if (bestLength < 2) {
+            return shortened.join(':');
+        }
+
+        const left = shortened.slice(0, bestStart).join(':');
+        const right = shortened.slice(bestStart + bestLength).join(':');
+
+        if (!left && !right) return '::';
+        if (!left) return `::${right}`;
+        if (!right) return `${left}::`;
+        return `${left}::${right}`;
+    },
+
+    /**
      * Convert wildcard mask to subnet mask
      * @param {string} wildcard - Wildcard mask
      * @returns {string} - Subnet mask
