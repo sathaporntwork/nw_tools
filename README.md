@@ -64,7 +64,7 @@ Every tool carries its own SemVer (`MAJOR.MINOR.PATCH`) badge in its header, and
 
 | File | Version | Notes |
 |---|---|---|
-| `compare.html` | v3.0.0 | Multi-strategy diff engine: section splitting, hierarchical config blocks, key-based tables (ARP/MAC/route/BGP/OSPF/interface), noise masking, sanity dashboard, word wrap |
+| `compare.html` | v3.1.1 | Multi-strategy diff engine: section splitting, hierarchical config blocks, key-based tables (ARP/MAC/route/BGP/OSPF/interface), noise masking, sanity dashboard, word wrap, filter-count pills |
 | `subnet_calculator.html` | v1.2.0 | IPv6 usable-host range & boundary checks; self-hosted fonts |
 | `index.html` | v1.2.0 | Per-tool version chips on the hub; self-hosted fonts |
 | `mac_vender.html` | v1.1.0 | Clearer offline/file:// guidance (start-server.bat); self-hosted fonts |

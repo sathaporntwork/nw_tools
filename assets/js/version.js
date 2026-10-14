@@ -24,7 +24,7 @@ const TOOL_VERSIONS = {
     suite: { version: '1.2.0', date: '2026-10-15', name: 'Network Tools Suite' },
 
     'index.html':             { version: '1.2.0', date: '2026-10-15', name: 'Tools Hub' },
-    'compare.html':           { version: '3.0.0', date: '2026-10-15', name: 'Network Pre/Post-Check Diff' },
+    'compare.html':           { version: '3.1.1', date: '2026-10-15', name: 'Network Pre/Post-Check Diff' },
     'bng_gw_pingtrace.html':  { version: '1.0.1', date: '2026-10-15', name: 'BNG GW Ping/Traceroute' },
     'mac_converter.html':     { version: '1.0.1', date: '2026-10-15', name: 'MAC Address Converter' },
     'mac_vender.html':        { version: '1.1.0', date: '2026-10-15', name: 'MAC Vendor Lookup' },
