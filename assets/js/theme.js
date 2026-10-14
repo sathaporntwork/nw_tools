@@ -10,9 +10,11 @@ const ThemeManager = {
     init() {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
             document.body.setAttribute('data-theme', 'light');
             this.updateIcon(true);
         } else {
+            document.documentElement.removeAttribute('data-theme');
             document.body.removeAttribute('data-theme');
             this.updateIcon(false);
         }
@@ -22,12 +24,14 @@ const ThemeManager = {
      * Toggle between light and dark themes
      */
     toggle() {
-        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const isLight = document.body.getAttribute('data-theme') === 'light' || document.documentElement.getAttribute('data-theme') === 'light';
         if (isLight) {
+            document.documentElement.removeAttribute('data-theme');
             document.body.removeAttribute('data-theme');
             localStorage.setItem('theme', 'dark');
             this.updateIcon(false);
         } else {
+            document.documentElement.setAttribute('data-theme', 'light');
             document.body.setAttribute('data-theme', 'light');
             localStorage.setItem('theme', 'light');
             this.updateIcon(true);
