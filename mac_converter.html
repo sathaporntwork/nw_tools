@@ -7,11 +7,7 @@
     <title>MAC Address Format Converter</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22><rect x=%223%22 y=%2211%22 width=%2218%22 height=%2211%22 rx=%222%22/><path d=%22M7 11V7a5 5 0 0 1 10 0v4%22/></svg>">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/fonts.css">
     <link rel="stylesheet" href="assets/styles/common.css">
     <style>
         .container {
@@ -72,7 +68,7 @@
         }
 
         .format-item span {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-family-mono);
             font-size: 0.95rem;
             color: var(--text-main);
             letter-spacing: 0.5px;
@@ -169,7 +165,7 @@
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                 </div>
-                <h1>MAC Address Converter</h1>
+                <h1>MAC Address Converter <span class="version-badge" data-tool-version></span></h1>
                 <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn" aria-label="Toggle theme">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -220,6 +216,7 @@
         <p>Modern Network Tools Suite • Built with ❤️ for Network Engineers</p>
     </div>
 
+    <script src="assets/js/version.js"></script>
     <script src="assets/js/theme.js"></script>
     <script>
         function cleanMacAddress(mac) {

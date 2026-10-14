@@ -8,11 +8,7 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%2222 12 18 12 15 21 9 3 6 12 2 12%22 /></svg>">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/fonts.css">
     <link rel="stylesheet" href="assets/styles/common.css">
 
     <style>
@@ -29,7 +25,7 @@
         #inputText,
         #outputText {
             min-height: 250px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-family-mono);
         }
 
         /* Secondary (Copy) Button - Green Gradient */
@@ -69,7 +65,7 @@
                 <div class="logo-icon"
                     style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
                     ⚡</div>
-                <h1>Ping Result Parser</h1>
+                <h1>Ping Result Parser <span class="version-badge" data-tool-version></span></h1>
                 <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -239,6 +235,7 @@ Ping statistics for 8.8.8.8:
             setTimeout(() => { toast.className = ""; }, 3000);
         }
     </script>
+    <script src="assets/js/version.js"></script>
     <script src="assets/js/theme.js"></script>
 
     <div class="footer">

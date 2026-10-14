@@ -9,11 +9,7 @@
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 
     <!-- Preconnect for fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/fonts.css">
     <link rel="stylesheet" href="assets/styles/common.css">
     <style>
         /* Page-specific styles for script.html */
@@ -117,7 +113,7 @@
                         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
                     </svg>
                 </div>
-                <h1>Script Generator</h1>
+                <h1>Script Generator <span class="version-badge" data-tool-version></span></h1>
                 <div style="display: flex; gap: 0.5rem;">
                     <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -217,6 +213,7 @@
             setTimeout(() => { toast.className = ""; }, 3000);
         }
     </script>
+    <script src="assets/js/version.js"></script>
     <script src="assets/js/theme.js"></script>
 
     <div class="footer">

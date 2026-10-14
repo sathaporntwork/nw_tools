@@ -9,12 +9,7 @@
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><polyline points=%228 12 12 8 16 12%22/><line x1=%2212%22 y1=%2216%22 x2=%2212%22 y2=%228%22/></svg>"
     />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="assets/styles/fonts.css">
     <link rel="stylesheet" href="assets/styles/common.css" />
 
     <style>
@@ -67,7 +62,7 @@
         padding: 0.65rem 1rem;
         margin-bottom: 1rem;
         font-size: 0.82rem;
-        font-family: "JetBrains Mono", monospace;
+        font-family: var(--font-family-mono);
         transition: all 0.3s ease;
       }
 
@@ -87,7 +82,7 @@
         border-radius: 999px;
         font-size: 0.8rem;
         font-weight: 600;
-        font-family: "JetBrains Mono", monospace;
+        font-family: var(--font-family-mono);
       }
 
       .badge-device {
@@ -239,7 +234,7 @@
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
           </div>
-          <h1>BNG GW Traceroute</h1>
+          <h1>BNG GW Traceroute <span class="version-badge" data-tool-version></span></h1>
           <button
             class="theme-toggle"
             onclick="ThemeManager.toggle()"
@@ -540,6 +535,7 @@
         }, 3000);
       }
     </script>
+    <script src="assets/js/version.js"></script>
     <script src="assets/js/theme.js"></script>
   </body>
 </html>

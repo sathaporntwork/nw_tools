@@ -9,9 +9,7 @@
     <title>MAC Address Vendor Lookup</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22></circle><line x1=%2212%22 y1=%228%22 x2=%2212%22 y2=%2212%22></line><line x1=%2212%22 y1=%2216%22 x2=%2212.01%22 y2=%2216%22></line></svg>">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/fonts.css">
     <link rel="stylesheet" href="assets/styles/common.css">
 
     <style>
@@ -66,7 +64,7 @@
                     <line x1="12" y1="8" x2="12" y2="12"></line>
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
-                <h1>MAC Vendor Lookup</h1>
+                <h1>MAC Vendor Lookup <span class="version-badge" data-tool-version></span></h1>
                 <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -189,7 +187,7 @@
                     console.error(error);
                     let errorMsg = error.message;
                     if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-                        errorMsg = 'Strict Browser Security detected. Browsers may block external API calls from local files (file://). <br><br><b>Solution:</b><br>1. Open this file using a local server (e.g. VS Code "Live Server")<br>2. Or disable CORS in your browser (development only)';
+                        errorMsg = 'Vendor lookup needs internet access, and browsers block external API calls from local files (file://). <br><br><b>Solution:</b><br>1. Double-click <b>start-server.bat</b>, then use http://localhost:8321/mac_vender.html<br>2. Or serve this folder with any local server (e.g. VS Code "Live Server")';
                         this.showError(errorMsg);
                     } else {
                         this.showError(errorMsg);
@@ -258,6 +256,7 @@
         <p>Modern Network Tools Suite • Built with ❤️ for Network Engineers</p>
     </div>
 
+    <script src="assets/js/version.js"></script>
     <script src="assets/js/theme.js"></script>
 </body>
 

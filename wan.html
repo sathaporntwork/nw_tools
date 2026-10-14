@@ -9,11 +9,7 @@
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><line x1=%222%22 y1=%2212%22 x2=%2222%22 y2=%2212%22/><path d=%22M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z%22/></svg>">
 
     <!-- Preconnect for fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/fonts.css">
     <link rel="stylesheet" href="assets/styles/common.css">
 
     <style>
@@ -27,7 +23,7 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 0.75rem 1rem;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-family-mono);
             font-size: 0.875rem;
             color: var(--error-color);
             text-align: center;
@@ -64,7 +60,7 @@
         }
 
         .verify-section code {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-family-mono);
             font-size: 0.875rem;
             color: var(--error-color);
         }
@@ -90,7 +86,7 @@
                     <path
                         d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
-                <h1>VPN WAN Finder</h1>
+                <h1>VPN WAN Finder <span class="version-badge" data-tool-version></span></h1>
                 <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -171,6 +167,7 @@
 
     </script>
 
+    <script src="assets/js/version.js"></script>
     <script src="assets/js/theme.js"></script>
 
     <div class="footer">

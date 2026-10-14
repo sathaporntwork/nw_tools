@@ -5,21 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="Configuration Compare - Advanced text and network configuration comparison inspired by Beyond Compare with intra-line difference highlighting, rules, minimap, and display filters.">
-    <title>Configuration Compare — Beyond Compare Edition</title>
+        content="Network Pre/Post-Check Diff Engine - Context-aware, grammar-filtered, multi-strategy comparison for maintenance-window validation: hierarchical config block diff, key-based table diff (ARP/MAC/route/BGP), noise masking of timers & counters, and a network sanity summary dashboard.">
+    <title>Network Pre/Post-Check Diff — Beyond Compare Edition</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22><rect x=%223%22 y=%223%22 width=%2218%22 height=%2218%22 rx=%222%22/><path d=%22M9 3v18%22/><path d=%22M15 3v18%22/></svg>">
 
-    <!-- Preconnect for fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-        rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/fonts.css">
     <link rel="stylesheet" href="assets/styles/common.css">
 
-    <!-- Diff Library (jsdiff) -->
-    <script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
+    <!-- Diff Library (jsdiff) — local copy first (works offline), CDN as fallback -->
+    <script src="assets/js/diff.min.js"></script>
+    <script>window.Diff || document.write('<script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"><\/script>');</script>
 
     <style>
         /* ========================================================
@@ -112,10 +108,17 @@
             --bc-diff-text: #fca5a5;
             --bc-diff-gutter: #ef4444;
 
-            --bc-unimportant-bg: rgba(59, 130, 246, 0.12);
-            --bc-unimportant-border: rgba(59, 130, 246, 0.35);
-            --bc-unimportant-inline: rgba(59, 130, 246, 0.28);
-            --bc-unimportant-text: #93c5fd;
+            --bc-unimportant-bg: rgba(148, 163, 184, 0.10);
+            --bc-unimportant-border: rgba(148, 163, 184, 0.30);
+            --bc-unimportant-inline: rgba(148, 163, 184, 0.22);
+            --bc-unimportant-text: #94a3b8;
+
+            --bc-critical-bg: rgba(220, 38, 38, 0.16);
+            --bc-critical-inline: rgba(220, 38, 38, 0.32);
+            --bc-warning-bg: rgba(245, 158, 11, 0.10);
+            --bc-warning-inline: rgba(245, 158, 11, 0.28);
+            --bc-section-bg: rgba(99, 102, 241, 0.10);
+            --bc-blockheader-bg: rgba(148, 163, 184, 0.06);
 
             --bc-line-num-bg: rgba(0, 0, 0, 0.25);
             --bc-line-num-color: #71717a;
@@ -130,10 +133,17 @@
             --bc-diff-text: #b91c1c;
             --bc-diff-gutter: #dc2626;
 
-            --bc-unimportant-bg: rgba(59, 130, 246, 0.10);
-            --bc-unimportant-border: rgba(59, 130, 246, 0.30);
-            --bc-unimportant-inline: rgba(59, 130, 246, 0.20);
-            --bc-unimportant-text: #1d4ed8;
+            --bc-unimportant-bg: rgba(100, 116, 139, 0.08);
+            --bc-unimportant-border: rgba(100, 116, 139, 0.28);
+            --bc-unimportant-inline: rgba(100, 116, 139, 0.18);
+            --bc-unimportant-text: #475569;
+
+            --bc-critical-bg: rgba(220, 38, 38, 0.10);
+            --bc-critical-inline: rgba(220, 38, 38, 0.22);
+            --bc-warning-bg: rgba(217, 119, 6, 0.10);
+            --bc-warning-inline: rgba(217, 119, 6, 0.22);
+            --bc-section-bg: rgba(79, 70, 229, 0.08);
+            --bc-blockheader-bg: rgba(100, 116, 139, 0.07);
 
             --bc-line-num-bg: rgba(0, 0, 0, 0.05);
             --bc-line-num-color: #64748b;
@@ -232,15 +242,58 @@
         }
 
         /* ========================================================
-           CONTROLS (Original Centered Spacious Layout)
+           CONTROLS (Grouped Two-Tier Layout)
            ======================================================== */
         .controls {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            gap: 1rem;
+            gap: 0.8rem;
             margin-bottom: 1.75rem;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.7rem;
             flex-wrap: wrap;
+        }
+
+        .control-row-primary {
+            gap: 0.9rem;
+        }
+
+        .control-group-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-right: 0.15rem;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .control-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border-color);
+            margin: 0 0.25rem;
+            flex-shrink: 0;
+        }
+
+        /* Compact secondary actions (samples & destructive) */
+        .controls .control-row-secondary button {
+            min-width: 0 !important;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.85rem !important;
+            border-radius: 8px !important;
+        }
+
+        .controls .control-row-secondary button svg {
+            width: 15px !important;
+            height: 15px !important;
         }
 
         .controls button {
@@ -437,7 +490,7 @@
 
         .pane-badge {
             font-size: 11px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-family-mono);
             font-weight: 500;
             padding: 2px 7px;
             border-radius: 6px;
@@ -524,7 +577,7 @@
             padding: 0.75rem 0.45rem;
             width: 48px;
             min-width: 48px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-family-mono);
             font-size: 12px;
             line-height: 1.5;
             user-select: none;
@@ -535,7 +588,7 @@
         textarea.code-input {
             height: 100%;
             font-size: 12.5px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-family-mono);
             line-height: 1.5;
             flex: 1;
             border: none;
@@ -617,6 +670,12 @@
             transform: translateY(-1px);
         }
 
+        .btn-summary-action.active {
+            border-color: var(--accent-primary) !important;
+            color: var(--accent-primary) !important;
+            background: rgba(249, 115, 22, 0.14) !important;
+        }
+
         .summary-status {
             display: flex;
             align-items: center;
@@ -643,8 +702,8 @@
         }
 
         .status-dot.unimportant {
-            background: #3b82f6;
-            box-shadow: 0 0 10px #3b82f6;
+            background: #94a3b8;
+            box-shadow: 0 0 10px #94a3b8;
         }
 
         .summary-stats-pills {
@@ -661,7 +720,7 @@
             padding: 3px 8px;
             border-radius: 6px;
             font-size: 12px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-family-mono);
             font-weight: 600;
             background: var(--bg-input);
             border: 1px solid var(--border-color);
@@ -681,9 +740,15 @@
         }
 
         .stat-pill.unimportant {
-            color: #3b82f6;
-            border-color: rgba(59, 130, 246, 0.35);
-            background: rgba(59, 130, 246, 0.08);
+            color: var(--bc-unimportant-text);
+            border-color: var(--bc-unimportant-border);
+            background: var(--bc-unimportant-bg);
+        }
+
+        .stat-pill.critical {
+            color: #f87171;
+            border-color: rgba(220, 38, 38, 0.45);
+            background: rgba(220, 38, 38, 0.10);
         }
 
         /* ========================================================
@@ -733,7 +798,7 @@
             grid-template-columns: 1fr 1fr;
             overflow: auto;
             position: relative;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-family-mono);
             font-size: 12.5px;
             line-height: 1.6;
         }
@@ -750,6 +815,17 @@
 
         .diff-pane-view.left-pane {
             border-right: 1px solid var(--border-color);
+        }
+
+        /* Word Wrap Mode (toggle) */
+        .diff-panes-container.wrap-mode .line-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .diff-panes-container.wrap-mode .diff-row {
+            min-width: 0;
         }
 
         /* Diff Lines & Rows */
@@ -838,7 +914,7 @@
         }
 
         .diff-row.row-unimportant .line-sign {
-            color: #3b82f6;
+            color: var(--bc-unimportant-text);
         }
 
         .diff-row.row-empty {
@@ -1006,7 +1082,7 @@
         }
 
         .nav-dock-counter {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-family-mono);
             font-size: 12px;
             font-weight: 700;
             color: var(--text-main);
@@ -1282,6 +1358,377 @@
             box-shadow: 0 8px 24px rgba(59, 130, 246, 0.45) !important;
         }
 
+        /* ========================================================
+           PRE/POST-CHECK ENGINE: SEVERITY, SECTIONS & DASHBOARD
+           ======================================================== */
+
+        /* Severity row states (Critical = missing routes / down peers) */
+        .diff-row.row-critical {
+            background-color: var(--bc-critical-bg);
+            color: #fecaca;
+            box-shadow: inset 3px 0 0 #dc2626;
+        }
+
+        [data-theme="light"] .diff-row.row-critical {
+            color: #991b1b;
+        }
+
+        .diff-row.row-critical .line-sign {
+            color: #ef4444;
+            font-weight: 700;
+        }
+
+        .diff-row.row-warning {
+            background-color: var(--bc-warning-bg);
+            box-shadow: inset 3px 0 0 #f59e0b;
+        }
+
+        /* Config block parent headers */
+        .diff-row.row-block-header {
+            background-color: var(--bc-blockheader-bg);
+            font-weight: 600;
+        }
+
+        .diff-row.row-block-header .line-text {
+            text-decoration: underline dotted rgba(148, 163, 184, 0.4);
+            text-underline-offset: 3px;
+        }
+
+        /* Command section bands (Router# show ...) */
+        .diff-row.section-band {
+            /* Opaque layered background so overlapping sticky bands don't bleed through */
+            background: linear-gradient(0deg, var(--bc-section-bg), var(--bc-section-bg)), var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 700;
+            color: var(--text-main);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            min-height: 1.6em;
+        }
+
+        .diff-row.section-band.band-removed {
+            background: linear-gradient(0deg, var(--bc-critical-bg), var(--bc-critical-bg)), var(--bg-card);
+        }
+
+        .diff-row.section-band.band-added {
+            background: linear-gradient(0deg, rgba(16, 185, 129, 0.10), rgba(16, 185, 129, 0.10)), var(--bg-card);
+        }
+
+        .diff-row.section-band .line-gutter {
+            background: transparent;
+        }
+
+        .section-engine-chip {
+            display: inline-block;
+            font-family: var(--font-family);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            padding: 1px 6px;
+            margin-right: 8px;
+            border-radius: 4px;
+            vertical-align: 1px;
+            background: rgba(99, 102, 241, 0.18);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.35);
+        }
+
+        [data-theme="light"] .section-engine-chip {
+            color: #4338ca;
+        }
+
+        .section-engine-chip.chip-table {
+            background: rgba(16, 185, 129, 0.14);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.35);
+        }
+
+        [data-theme="light"] .section-engine-chip.chip-table {
+            color: #047857;
+        }
+
+        .section-engine-chip.chip-config {
+            background: rgba(249, 115, 22, 0.14);
+            color: #fb923c;
+            border-color: rgba(249, 115, 22, 0.35);
+        }
+
+        [data-theme="light"] .section-engine-chip.chip-config {
+            color: #c2410c;
+        }
+
+        /* Classification badges & severity marks inside rows */
+        .row-badge {
+            display: inline-block;
+            font-family: var(--font-family);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            padding: 1px 6px;
+            margin-right: 8px;
+            border-radius: 4px;
+            vertical-align: 1px;
+        }
+
+        .row-badge.badge-added {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .row-badge.badge-removed {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .row-badge.badge-modified {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        [data-theme="light"] .row-badge.badge-added {
+            color: #047857;
+        }
+
+        [data-theme="light"] .row-badge.badge-removed {
+            color: #b91c1c;
+        }
+
+        [data-theme="light"] .row-badge.badge-modified {
+            color: #b45309;
+        }
+
+        .sev-mark {
+            display: inline-block;
+            margin-right: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #ef4444;
+        }
+
+        .sev-mark.sev-warn {
+            color: #f59e0b;
+        }
+
+        /* Intra-line highlights for critical/warning rows */
+        .inline-diff-critical {
+            background-color: var(--bc-critical-inline);
+            border-radius: 3px;
+            box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.45);
+            font-weight: 700;
+            padding: 1px 3px;
+            color: #ffffff;
+        }
+
+        [data-theme="light"] .inline-diff-critical {
+            color: #7f1d1d;
+        }
+
+        /* ========================================================
+           NETWORK SANITY SUMMARY (EXECUTIVE DASHBOARD)
+           ======================================================== */
+        .sanity-dashboard {
+            margin-bottom: 1.25rem;
+            display: none;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .sanity-strip {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            background: rgba(220, 38, 38, 0.10);
+            border: 1px solid rgba(220, 38, 38, 0.45);
+            border-radius: 12px;
+            padding: 0.55rem 0.85rem;
+        }
+
+        .sanity-strip .strip-title {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: #f87171;
+            white-space: nowrap;
+        }
+
+        [data-theme="light"] .sanity-strip .strip-title {
+            color: #b91c1c;
+        }
+
+        .sanity-strip .strip-item {
+            width: auto !important;
+            font-size: 11.5px;
+            font-weight: 600;
+            font-family: var(--font-family-mono);
+            padding: 3px 10px !important;
+            border-radius: 9999px !important;
+            border: 1px solid rgba(220, 38, 38, 0.45) !important;
+            background: rgba(220, 38, 38, 0.12) !important;
+            color: #fecaca !important;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        [data-theme="light"] .sanity-strip .strip-item {
+            color: #991b1b !important;
+        }
+
+        .sanity-strip .strip-item:hover {
+            background: rgba(220, 38, 38, 0.3) !important;
+            transform: translateY(-1px);
+        }
+
+        .sanity-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.85rem;
+        }
+
+        .sanity-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px -5px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sanity-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.6rem 0.95rem;
+            font-size: 13px;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-input);
+        }
+
+        .sanity-card-header.ok span:first-child {
+            color: #34d399;
+        }
+
+        .sanity-card-header.warning span:first-child {
+            color: #fbbf24;
+        }
+
+        .sanity-card-header.critical span:first-child {
+            color: #f87171;
+        }
+
+        [data-theme="light"] .sanity-card-header.ok span:first-child {
+            color: #059669;
+        }
+
+        [data-theme="light"] .sanity-card-header.warning span:first-child {
+            color: #b45309;
+        }
+
+        [data-theme="light"] .sanity-card-header.critical span:first-child {
+            color: #b91c1c;
+        }
+
+        .sanity-count {
+            font-family: var(--font-family-mono);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .sanity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0.35rem;
+            overflow-y: auto;
+            max-height: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sanity-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 11.5px;
+            font-family: var(--font-family-mono);
+            padding: 5px 8px;
+            border-radius: 7px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background 0.15s ease;
+        }
+
+        .sanity-item::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: var(--text-muted);
+        }
+
+        .sanity-item.critical {
+            border-left-color: #dc2626;
+            color: #fca5a5;
+        }
+
+        .sanity-item.critical::before {
+            background: #dc2626;
+            box-shadow: 0 0 6px #dc2626;
+        }
+
+        .sanity-item.warning {
+            border-left-color: #f59e0b;
+            color: #fcd34d;
+        }
+
+        .sanity-item.warning::before {
+            background: #f59e0b;
+        }
+
+        [data-theme="light"] .sanity-item.critical {
+            color: #991b1b;
+        }
+
+        [data-theme="light"] .sanity-item.warning {
+            color: #92400e;
+        }
+
+        .sanity-item.info {
+            color: var(--text-muted);
+        }
+
+        .sanity-item:hover {
+            background: rgba(249, 115, 22, 0.10);
+        }
+
+        .sanity-item.empty {
+            cursor: default;
+            justify-content: center;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .sanity-item.empty::before {
+            display: none;
+        }
+
+        @media (max-width: 992px) {
+            .sanity-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Responsive */
         @media (max-width: 992px) {
             .compare-inputs-grid {
@@ -1331,7 +1778,7 @@
                             <path d="M15 3v18" />
                         </svg>
                     </div>
-                    <h1>Configuration Compare</h1>
+                    <h1>Network Pre/Post-Check Diff <span class="version-badge" data-tool-version></span></h1>
                     <span class="badge-bc">Beyond Compare</span>
                 </div>
             </div>
@@ -1357,6 +1804,7 @@
         <!-- Controls & Input Editors Card -->
         <section class="card">
             <div class="controls">
+                <div class="control-row control-row-primary">
                 <button id="compareBtn" title="Compare configurations (Ctrl+Enter)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1366,17 +1814,26 @@
                         <path d="M3 21l0 -3" />
                         <circle cx="5" cy="19" r="2" />
                     </svg>
-                    <span>Compare Configs</span>
+                    <span>Compare (Pre/Post)</span>
                 </button>
 
-                <div class="segmented-group" id="alignModeGroup" title="Comparison Alignment Strategy">
-                    <button class="segmented-btn active" data-align="seq" id="alignSeqBtn" title="Sequential line order comparison (Standard)">
-                        <span>Config Mode</span>
+                <div class="segmented-group" id="alignModeGroup" title="Diff Engine Strategy">
+                    <span class="segmented-label">Engine:</span>
+                    <button class="segmented-btn active" data-align="auto" id="alignAutoBtn" title="Auto-detect per command section: config blocks, key tables, or plain text (recommended for pre/post-check captures)">
+                        <span>Auto</span>
                     </button>
-                    <button class="segmented-btn" data-align="table" id="alignTableBtn" title="Order-tolerant key alignment (Best for ARP / MAC / Routing tables)">
-                        <span>ARP / Table Mode</span>
+                    <button class="segmented-btn" data-align="config" id="alignConfigBtn" title="Hierarchical block diff for running-config / startup-config (children only compared within the same parent block)">
+                        <span>Config Blocks</span>
+                    </button>
+                    <button class="segmented-btn" data-align="table" id="alignTableBtn" title="Key-based order-tolerant diff for ARP / MAC / route / BGP / interface tables">
+                        <span>Key Tables</span>
+                    </button>
+                    <button class="segmented-btn" data-align="text" id="alignTextBtn" title="Plain text LCS diff with intra-line highlighting">
+                        <span>Plain Text</span>
                     </button>
                 </div>
+
+                <span class="control-divider"></span>
 
                 <button id="swapSidesBtn" class="btn-secondary" title="Swap Left and Right sides (Alt+S)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -1396,6 +1853,20 @@
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                     </svg>
                     <span>Rules...</span>
+                </button>
+                </div>
+
+                <div class="control-row control-row-secondary">
+                <span class="control-group-label">Samples</span>
+
+                <button id="loadScenarioBtn" class="btn-secondary" title="Load full maintenance-window scenario: show run + ip route + ip arp + mac address-table + bgp summary, before/after with timer drift, moved MAC, ARP flip, missing route, next-hop shift, BGP peer down & config change">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                        <path d="M2 12h20" />
+                    </svg>
+                    <span>Full Scenario</span>
                 </button>
 
                 <button id="loadSampleBtn" class="btn-secondary" title="Load sample Cisco router configurations">
@@ -1420,6 +1891,8 @@
                     <span>Sample ARP</span>
                 </button>
 
+                <span class="control-divider"></span>
+
                 <button id="clearAllBtn" class="btn-secondary" title="Clear all text and reset" style="background-image: linear-gradient(135deg, #f87171, #b91c1c) !important; color: white !important; border: none !important;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1429,6 +1902,7 @@
                     </svg>
                     <span>Clear All</span>
                 </button>
+                </div>
             </div>
 
             <!-- Input Editors Grid -->
@@ -1551,8 +2025,12 @@
                         <span>=</span><span id="sameCount">0</span> same
                     </div>
                     <div class="stat-pill unimportant" id="statUnimportant" style="display: none;"
-                        title="Unimportant Differences (Ignored)">
+                        title="Unimportant Differences (timers, counters, masked noise)">
                         <span>•</span><span id="unimportantCount">0</span> unimp
+                    </div>
+                    <div class="stat-pill critical" id="statCritical" style="display: none;"
+                        title="Critical Alerts: missing routes, down peers">
+                        <span>⚠</span><span id="criticalCount">0</span> critical
                     </div>
                     <div class="stat-pill same" id="statTime" title="Comparison Time">
                         <span id="diffDuration">0ms</span>
@@ -1566,6 +2044,7 @@
                     <span class="segmented-label">Show:</span>
                     <button class="segmented-btn active" data-filter="all">All</button>
                     <button class="segmented-btn" data-filter="diff">Diffs</button>
+                    <button class="segmented-btn" data-filter="critical" title="Critical alerts only: missing routes, down BGP/OSPF peers">Critical</button>
                     <button class="segmented-btn" data-filter="same">Same</button>
                     <button class="segmented-btn" data-filter="context">Context</button>
                 </div>
@@ -1595,6 +2074,16 @@
                     </button>
                 </div>
 
+                <button class="btn-summary-action" id="wrapToggleBtn" aria-pressed="false" title="Toggle word wrap for long lines in the diff panes">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <path d="M3 12h15a3 3 0 1 1 0 6h-4" />
+                        <polyline points="16 16 14 18 16 20" />
+                        <line x1="3" y1="18" x2="10" y2="18" />
+                    </svg>
+                    <span id="wrapToggleText">Wrap: Off</span>
+                </button>
+
                 <button class="btn-summary-action" id="toggleInputsBtn" title="Toggle input editor panels">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="4 14 10 14 10 20"/>
@@ -1612,6 +2101,16 @@
                     </svg>
                     <span>Copy Patch</span>
                 </button>
+            </div>
+        </section>
+
+        <!-- Network Sanity Summary (Executive Dashboard) -->
+        <section class="sanity-dashboard" id="sanityDashboard">
+            <div class="sanity-strip" id="sanityCriticalStrip"></div>
+            <div class="sanity-cards">
+                <div class="sanity-card" id="sanityCardRoutes"></div>
+                <div class="sanity-card" id="sanityCardAdjacency"></div>
+                <div class="sanity-card" id="sanityCardL2"></div>
             </div>
         </section>
 
@@ -1796,6 +2295,46 @@
                         </label>
                     </div>
 
+                    <!-- Dynamic Output Noise Masking -->
+                    <div class="rule-group">
+                        <div class="rule-group-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M3 12h4l3-9 4 18 3-9h4" />
+                            </svg>
+                            Dynamic Output Noise Masking (Volatile Data)
+                        </div>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreUptimeTimers" checked>
+                            <div>
+                                <div><strong>Mask uptime / age timers</strong></div>
+                                <div class="rule-item-desc">Routing & BGP timers like 3w4d, 2d04h, 00:14:22, never</div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreCounters" checked>
+                            <div>
+                                <div><strong>Mask packet/byte counters & rates</strong></div>
+                                <div class="rule-item-desc">show interface counters, input/output rates, txload/rxload, drops</div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreCryptoHashes" checked>
+                            <div>
+                                <div><strong>Mask crypto & password hashes</strong></div>
+                                <div class="rule-item-desc">secret 5 $1$..., type-7 passwords, long hex/certificate strings</div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreNtpClock" checked>
+                            <div>
+                                <div><strong>Mask NTP clock period</strong></div>
+                                <div class="rule-item-desc">The constantly changing "clock period" value in NTP status</div>
+                            </div>
+                        </label>
+                    </div>
+
                     <!-- Alignment & Order Strategy -->
                     <div class="rule-group">
                         <div class="rule-group-title">
@@ -1809,17 +2348,31 @@
                             Alignment & Order Strategy
                         </div>
                         <label class="rule-item">
-                            <input type="radio" name="alignStrategyRadio" id="radioAlignSeq" value="seq" checked>
+                            <input type="radio" name="alignStrategyRadio" id="radioAlignAuto" value="auto" checked>
                             <div>
-                                <div><strong>Sequential / Hierarchy Mode</strong></div>
-                                <div class="rule-item-desc">Standard line order comparison; best for router & switch configurations</div>
+                                <div><strong>Auto-Detect (recommended)</strong></div>
+                                <div class="rule-item-desc">Splits capture into command sections (Router# show ...) and routes each to the right engine</div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="radio" name="alignStrategyRadio" id="radioAlignConfig" value="config">
+                            <div>
+                                <div><strong>Hierarchical Config Blocks</strong></div>
+                                <div class="rule-item-desc">Tree-parses configurations; children only compared within the same parent block (interface / router bgp / address-family)</div>
                             </div>
                         </label>
                         <label class="rule-item">
                             <input type="radio" name="alignStrategyRadio" id="radioAlignTable" value="table">
                             <div>
-                                <div><strong>ARP / Table Mode (Order-Tolerant Key Matching)</strong></div>
-                                <div class="rule-item-desc">Matches entries by IP/MAC even if lines are shuffled or sorted differently</div>
+                                <div><strong>Key-Based Tables (Order-Tolerant)</strong></div>
+                                <div class="rule-item-desc">Matches rows by composite primary key (VRF+IP, VLAN+MAC, Prefix, Neighbor IP) even if shuffled</div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="radio" name="alignStrategyRadio" id="radioAlignText" value="text">
+                            <div>
+                                <div><strong>Plain Text (LCS)</strong></div>
+                                <div class="rule-item-desc">Classic line diff with intra-line highlighting for unstructured output</div>
                             </div>
                         </label>
                     </div>
@@ -1862,9 +2415,10 @@
     </main>
 
     <footer class="footer">
-        <p>Modern Network Tools Suite • Beyond Compare Configuration Engine</p>
+        <p>Modern Network Tools Suite • Beyond Compare Configuration Engine • <span class="version-badge" data-suite-version></span></p>
     </footer>
 
+    <script src="assets/js/version.js"></script>
     <script src="assets/js/theme.js"></script>
     <script>
         /**
@@ -1893,16 +2447,17 @@
             const displayFilterGroup = document.getElementById('displayFilterGroup');
             const contextLinesSelect = document.getElementById('contextLinesSelect');
             const viewModeGroup = document.getElementById('viewModeGroup');
+            const wrapToggleBtn = document.getElementById('wrapToggleBtn');
 
             const summaryBar = document.getElementById('summaryBar');
             const statusDot = document.getElementById('statusDot');
             const statusMessage = document.getElementById('statusMessage');
-            const addedCountEl = document.getElementById('addedCount');
-            const removedCountEl = document.getElementById('removedCount');
-            const modifiedCountEl = document.getElementById('modifiedCount');
             const sameCountEl = document.getElementById('sameCount');
             const unimportantCountEl = document.getElementById('unimportantCount');
             const statUnimportant = document.getElementById('statUnimportant');
+            const statCritical = document.getElementById('statCritical');
+            const criticalCountEl = document.getElementById('criticalCount');
+            const sanityDashboard = document.getElementById('sanityDashboard');
             const diffDurationEl = document.getElementById('diffDuration');
             const copyPatchBtn = document.getElementById('copyPatchBtn');
 
@@ -1939,13 +2494,16 @@
             const ruleIgnoreUnimportant = document.getElementById('ruleIgnoreUnimportant');
 
             // Internal State
-            let currentFilter = 'all'; // 'all' | 'diff' | 'same' | 'context'
+            let currentFilter = 'all'; // 'all' | 'diff' | 'critical' | 'same' | 'context'
             let contextLines = 3;
             let currentViewMode = 'side'; // 'side' | 'inline'
             let diffBlocks = []; // Array of difference blocks for navigation
             let currentDiffIndex = -1;
             let alignedLinesData = []; // Full aligned lines model for minimap and filtering
             let lastPatchText = '';
+            let currentFindings = null; // structured findings for the sanity dashboard
+            let expandedFolds = new Set(); // manually expanded fold ranges "start:end"
+            let wrapMode = false; // word wrap toggle for the diff panes
 
             // ----------------------------------------------------
             // Sample Cisco Configurations
@@ -2087,55 +2645,249 @@ Internet  10.1.1.2                7   0000.0c07.ac02  ARPA   Vlan10
 Internet  10.1.1.10              28   0000.0c07.ac10  ARPA   Vlan10
 Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
 
-            let currentAlignMode = 'seq'; // 'seq' | 'table'
+            // ----------------------------------------------------
+            // Sample Dataset: Full Maintenance-Window Pre/Post Capture
+            // (show run + ip route + ip arp + mac address-table + bgp summary)
+            // Contains: timer drift, moved MAC, ARP flip, missing route,
+            // next-hop shift, BGP peer down, config change
+            // ----------------------------------------------------
+            const scenarioOriginal = `CORE-RTR-01#show running-config
+Building configuration...
 
-            const alignSeqBtn = document.getElementById('alignSeqBtn');
-            const alignTableBtn = document.getElementById('alignTableBtn');
-            const radioAlignSeq = document.getElementById('radioAlignSeq');
-            const radioAlignTable = document.getElementById('radioAlignTable');
+Current configuration : 2893 bytes
+!
+! Last configuration change at 09:12:44 UTC Mon Oct 12 2026 by netops
+!
+version 17.6
+service timestamps debug datetime msec
+hostname CORE-RTR-01
+!
+vrf definition MGMT
+ rd 65000:100
+ address-family ipv4
+ exit-address-family
+!
+interface GigabitEthernet0/0/0
+ description UPLINK to DC-CORE-SW-01
+ ip address 10.255.0.1 255.255.255.252
+ no shutdown
+!
+interface GigabitEthernet0/0/1
+ description OFFICE-LAN
+ ip address 10.40.1.1 255.255.255.0
+!
+interface Serial0/1/0
+ description BACKUP-LINK-ISP2
+ ip address 10.99.0.2 255.255.255.252
+ shutdown
+!
+router bgp 65000
+ bgp router-id 172.16.0.1
+ neighbor 10.255.0.2 remote-as 65001
+ neighbor 10.255.0.2 description DC-PEER
+ neighbor 172.16.0.9 remote-as 65009
+ neighbor 172.16.0.9 description BRANCH-PEER
+!
+ip access-list extended ACL-MGMT
+ permit tcp host 10.40.1.50 any eq 22
+ permit icmp any any echo
+ deny ip any any log
+!
+line vty 0 4
+ transport input ssh
+ exec-timeout 30 0
+!
+end
+CORE-RTR-01#show ip route
+Codes: L - local, C - connected, S - static, O - OSPF, B - BGP
+Gateway of last resort is 10.255.0.2 to network 0.0.0.0
+
+C    10.40.1.0/24 is directly connected, GigabitEthernet0/0/1
+L    10.40.1.1/32 is directly connected, GigabitEthernet0/0/1
+C    10.255.0.0/30 is directly connected, GigabitEthernet0/0/0
+L    10.255.0.1/32 is directly connected, GigabitEthernet0/0/0
+B    172.20.0.0/16 [20/0] via 10.255.0.2, 3w4d
+O    10.50.0.0/16 [110/30] via 10.40.1.254, 00:14:22, GigabitEthernet0/0/1
+O    10.60.0.0/16 [110/40] via 10.40.1.254, 00:14:22, GigabitEthernet0/0/1
+D    10.70.0.0/16 [90/130816] via 10.40.1.253, 1w2d, GigabitEthernet0/0/1
+S    10.80.0.0/16 [1/0] via 10.40.1.9
+B    192.168.40.0/24 [20/0] via 10.255.0.2, 5w6d
+CORE-RTR-01#show ip arp
+Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+Internet  10.40.1.1               -   0000.0c07.ac01  ARPA   GigabitEthernet0/0/1
+Internet  10.40.1.20             14   0000.0c07.ac14  ARPA   GigabitEthernet0/0/1
+Internet  10.40.1.30              4   0000.0c07.ac1e  ARPA   GigabitEthernet0/0/1
+Internet  10.40.1.254             2   0000.0c07.acfe  ARPA   GigabitEthernet0/0/1
+Internet  10.40.1.253             8   0000.0c07.acfd  ARPA   GigabitEthernet0/0/1
+Internet  10.255.0.2              0   0000.0c07.aa02  ARPA   GigabitEthernet0/0/0
+CORE-RTR-01#show mac address-table
+          Mac Address Table
+-------------------------------------------
+Vlan    Mac Address       Type        Ports
+----    -----------       --------    -----
+  10    0000.0c07.ac01    DYNAMIC     Gi1/0/1
+  10    0000.0c07.ac14    DYNAMIC     Gi1/0/14
+  10    00a5.4b1c.90f2    DYNAMIC     Gi1/0/10
+  20    00a5.4b1c.77aa    DYNAMIC     Gi1/0/22
+  20    0000.0c07.acff    STATIC      CPU
+Total Mac Addresses for this criterion: 5
+CORE-RTR-01#show ip bgp summary
+BGP summary information for VRF default, address family IPv4 Unicast
+BGP router identifier 172.16.0.1, local AS number 65000
+Neighbor   V     AS    MsgRcvd    MsgSent   TblVer   InQ   OutQ  Up/Down   State/PfxRcd
+10.255.0.2 4    65001      15234      14981       55     0      0    3w4d           48
+172.16.0.9 4    65009        987        999       55     0      0    1w2d            4
+10.99.0.6  4    65002          0          0        1     0      0    never          Idle`;
+
+            const scenarioModified = `CORE-RTR-01#show running-config
+Building configuration...
+
+Current configuration : 2951 bytes
+!
+! Last configuration change at 02:03:19 UTC Thu Oct 15 2026 by netops
+!
+version 17.6
+service timestamps debug datetime msec
+hostname CORE-RTR-01
+!
+vrf definition MGMT
+ rd 65000:100
+ address-family ipv4
+ exit-address-family
+!
+interface GigabitEthernet0/0/0
+ description UPLINK to DC-CORE-SW-01 (10G UPGRADE)
+ ip address 10.255.0.1 255.255.255.252
+ no shutdown
+!
+interface GigabitEthernet0/0/1
+ description OFFICE-LAN
+ ip address 10.40.1.1 255.255.255.0
+!
+interface GigabitEthernet0/0/1.20
+ description VOIP-VLAN20
+ encapsulation dot1Q 20
+ ip address 10.40.20.1 255.255.255.0
+!
+interface Serial0/1/0
+ description BACKUP-LINK-ISP2
+ ip address 10.99.0.2 255.255.255.252
+ no shutdown
+!
+router bgp 65000
+ bgp router-id 172.16.0.1
+ neighbor 10.255.0.2 remote-as 65001
+ neighbor 10.255.0.2 description DC-PEER-10G
+ neighbor 172.16.0.9 remote-as 65009
+ neighbor 172.16.0.9 description BRANCH-PEER
+!
+ip access-list extended ACL-MGMT
+ permit tcp host 10.40.1.50 any eq 22
+ permit tcp any any eq 443
+ permit icmp any any echo
+ deny ip any any log
+!
+line vty 0 4
+ transport input ssh
+ exec-timeout 30 0
+!
+end
+CORE-RTR-01#show ip route
+Codes: L - local, C - connected, S - static, O - OSPF, B - BGP
+Gateway of last resort is 10.255.0.2 to network 0.0.0.0
+
+C    10.40.1.0/24 is directly connected, GigabitEthernet0/0/1
+L    10.40.1.1/32 is directly connected, GigabitEthernet0/0/1
+C    10.40.20.0/24 is directly connected, GigabitEthernet0/0/1.20
+L    10.40.20.1/32 is directly connected, GigabitEthernet0/0/1.20
+C    10.255.0.0/30 is directly connected, GigabitEthernet0/0/0
+L    10.255.0.1/32 is directly connected, GigabitEthernet0/0/0
+B    172.20.0.0/16 [20/0] via 10.255.0.2, 3w4d
+O    10.50.0.0/16 [110/34] via 10.40.1.254, 00:02:11, GigabitEthernet0/0/1
+O    10.60.0.0/16 [110/40] via 10.40.1.253, 00:02:11, GigabitEthernet0/0/1
+D    10.70.0.0/16 [90/130816] via 10.40.1.253, 1w2d, GigabitEthernet0/0/1
+S    10.80.0.0/16 [1/0] via 10.40.1.9
+S    10.90.0.0/16 [1/0] via 10.40.1.9
+CORE-RTR-01#show ip arp
+Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+Internet  10.40.1.1               -   0000.0c07.ac01  ARPA   GigabitEthernet0/0/1
+Internet  10.40.1.20              1   00a5.4b1c.3333  ARPA   GigabitEthernet0/0/1
+Internet  10.40.1.99              0   0000.0c07.ac63  ARPA   GigabitEthernet0/0/1
+Internet  10.40.1.254             3   0000.0c07.acfe  ARPA   GigabitEthernet0/0/1
+Internet  10.40.1.253             7   0000.0c07.acfd  ARPA   GigabitEthernet0/0/1
+Internet  10.255.0.2              0   0000.0c07.aa02  ARPA   GigabitEthernet0/0/0
+CORE-RTR-01#show mac address-table
+          Mac Address Table
+-------------------------------------------
+Vlan    Mac Address       Type        Ports
+----    -----------       --------    -----
+  10    0000.0c07.ac01    DYNAMIC     Gi1/0/1
+  10    0000.0c07.ac14    DYNAMIC     Gi1/0/14
+  10    00a5.4b1c.90f2    DYNAMIC     Te1/1/4
+  20    00a5.4b1c.88bb    DYNAMIC     Gi1/0/31
+  20    0000.0c07.acff    STATIC      CPU
+Total Mac Addresses for this criterion: 5
+CORE-RTR-01#show ip bgp summary
+BGP summary information for VRF default, address family IPv4 Unicast
+BGP router identifier 172.16.0.1, local AS number 65000
+Neighbor   V     AS    MsgRcvd    MsgSent   TblVer   InQ   OutQ  Up/Down   State/PfxRcd
+10.255.0.2 4    65001          5         10        1     0      0    00:04:11   Active
+172.16.0.9 4    65009        991       1003       56     0      0    1w2d            5
+10.99.0.6  4    65002          0          0        1     0      0    never          Idle
+10.255.1.6 4    65003          0          0        1     0      0    00:04:11   Idle`;
+
+            let currentAlignMode = 'auto'; // 'auto' | 'config' | 'table' | 'text'
+
+            const alignModeGroup = document.getElementById('alignModeGroup');
             const loadSampleArpBtn = document.getElementById('loadSampleArpBtn');
+            const loadScenarioBtn = document.getElementById('loadScenarioBtn');
 
             function setAlignMode(mode) {
                 currentAlignMode = mode;
-                if (alignSeqBtn && alignTableBtn) {
-                    alignSeqBtn.classList.toggle('active', mode === 'seq');
-                    alignTableBtn.classList.toggle('active', mode === 'table');
+                if (alignModeGroup) {
+                    alignModeGroup.querySelectorAll('.segmented-btn').forEach(b => {
+                        b.classList.toggle('active', b.dataset.align === mode);
+                    });
                 }
-                if (radioAlignSeq && radioAlignTable) {
-                    radioAlignSeq.checked = (mode === 'seq');
-                    radioAlignTable.checked = (mode === 'table');
-                }
-            }
-
-            if (alignSeqBtn) {
-                alignSeqBtn.addEventListener('click', () => {
-                    setAlignMode('seq');
-                    if (originalInput.value || modifiedInput.value) executeCompare();
+                document.querySelectorAll('input[name="alignStrategyRadio"]').forEach(r => {
+                    r.checked = (r.value === mode);
                 });
             }
 
-            if (alignTableBtn) {
-                alignTableBtn.addEventListener('click', () => {
-                    setAlignMode('table');
-                    if (originalInput.value || modifiedInput.value) executeCompare();
+            if (alignModeGroup) {
+                alignModeGroup.querySelectorAll('.segmented-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        setAlignMode(btn.dataset.align);
+                        if (originalInput.value || modifiedInput.value) executeCompare();
+                    });
                 });
             }
 
-            if (radioAlignSeq) {
-                radioAlignSeq.addEventListener('change', () => setAlignMode('seq'));
-            }
-            if (radioAlignTable) {
-                radioAlignTable.addEventListener('change', () => setAlignMode('table'));
+            document.querySelectorAll('input[name="alignStrategyRadio"]').forEach(radio => {
+                radio.addEventListener('change', () => setAlignMode(radio.value));
+            });
+
+            // Load Full Maintenance-Window Scenario (Auto engine)
+            if (loadScenarioBtn) {
+                loadScenarioBtn.addEventListener('click', () => {
+                    setAlignMode('auto');
+                    originalInput.value = scenarioOriginal;
+                    modifiedInput.value = scenarioModified;
+                    updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
+                    updateInputLineNumbers(modifiedInput, linesModified, rightStatsBadge);
+                    showToast("Full pre/post maintenance scenario loaded (Auto engine)", "info");
+                    executeCompare();
+                });
             }
 
             // Load Cisco Config Sample
             loadSampleBtn.addEventListener('click', () => {
-                setAlignMode('seq');
+                setAlignMode('config');
                 originalInput.value = sampleOriginal;
                 modifiedInput.value = sampleModified;
                 updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
                 updateInputLineNumbers(modifiedInput, linesModified, rightStatsBadge);
-                showToast("Sample Cisco router configs loaded", "info");
+                showToast("Sample Cisco router configs loaded (Config Blocks engine)", "info");
                 executeCompare();
             });
 
@@ -2147,7 +2899,7 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                     modifiedInput.value = sampleArpModified;
                     updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
                     updateInputLineNumbers(modifiedInput, linesModified, rightStatsBadge);
-                    showToast("Sample ARP tables loaded in Table Alignment Mode", "info");
+                    showToast("Sample ARP tables loaded (Key Tables engine)", "info");
                     executeCompare();
                 });
             }
@@ -2157,6 +2909,10 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
             // ----------------------------------------------------
             function getRules() {
                 const ruleIgnoreArpAgeEl = document.getElementById('ruleIgnoreArpAge');
+                const ruleIgnoreUptimeTimersEl = document.getElementById('ruleIgnoreUptimeTimers');
+                const ruleIgnoreCountersEl = document.getElementById('ruleIgnoreCounters');
+                const ruleIgnoreCryptoHashesEl = document.getElementById('ruleIgnoreCryptoHashes');
+                const ruleIgnoreNtpClockEl = document.getElementById('ruleIgnoreNtpClock');
                 return {
                     ignoreLeadingSpace: ruleIgnoreLeadingSpace.checked,
                     ignoreTrailingSpace: ruleIgnoreTrailingSpace.checked,
@@ -2166,8 +2922,57 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                     ignoreComments: ruleIgnoreComments.checked,
                     ignoreTimestamps: ruleIgnoreTimestamps.checked,
                     ignoreArpAge: ruleIgnoreArpAgeEl ? ruleIgnoreArpAgeEl.checked : true,
+                    ignoreUptimeTimers: ruleIgnoreUptimeTimersEl ? ruleIgnoreUptimeTimersEl.checked : true,
+                    ignoreCounters: ruleIgnoreCountersEl ? ruleIgnoreCountersEl.checked : true,
+                    ignoreCryptoHashes: ruleIgnoreCryptoHashesEl ? ruleIgnoreCryptoHashesEl.checked : true,
+                    ignoreNtpClock: ruleIgnoreNtpClockEl ? ruleIgnoreNtpClockEl.checked : true,
                     ignoreUnimportant: ruleIgnoreUnimportant.checked
                 };
+            }
+
+            // ----------------------------------------------------
+            // Dynamic Noise Masking ("Unimportant Differences")
+            // Replaces volatile values (timers, counters, hashes) with
+            // placeholders so lines match as identical-with-noise.
+            // ----------------------------------------------------
+            const RE_UPTIME_TIMER = /\b\d+(?:y|w|d|h)(?:\d+(?:y|w|d|h))*(?:\d+m|\ds)?\b|\b\d+:\d{2}:\d{2}(?::\d{2})?\b|\bnever\b/g;
+
+            function maskNoise(line, rules) {
+                let text = line;
+
+                // Uptime / age timers (3w4d, 2d04h, 1y2w, 00:14:22, never)
+                if (rules.ignoreUptimeTimers || rules.ignoreArpAge) {
+                    text = text.replace(RE_UPTIME_TIMER, '«N»');
+                }
+
+                // Volatile timestamps & capture headers
+                if (rules.ignoreTimestamps) {
+                    text = text
+                        .replace(/(Last configuration change at|NVRAM config last updated at|reload at|Restarted at|uptime is).*$/i, '«N»')
+                        .replace(/\b[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:\s+(?:UTC|GMT|[A-Z]{2,5}))?/g, '«N»')
+                        .replace(/\b\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?)?\b/g, '«N»');
+                }
+
+                // Interface packet/byte counters & rates (line-conditional)
+                if (rules.ignoreCounters &&
+                    /packets (input|output|dropped)|input rate|output rate|total output drops|no buffer|runts|giants|throttles|overruns|ignored|frame\b|\bCRC\b|broadcasts|txload|rxload|reliability/i.test(text)) {
+                    text = text.replace(/\b[\d,]+\b/g, '«N»');
+                }
+
+                // Crypto / password hashes
+                if (rules.ignoreCryptoHashes) {
+                    text = text
+                        .replace(/\b(secret|password)\s+(?:[5789]\s+)?\$\d\$\S+/gi, '$1 «N»')
+                        .replace(/\b(secret|password)\s+[5789]\s+\S+/gi, '$1 «N»')
+                        .replace(/\b[A-Fa-f0-9]{24,}\b/g, '«N»');
+                }
+
+                // NTP clock period
+                if (rules.ignoreNtpClock) {
+                    text = text.replace(/\b(clock period)\s+[\d.]+/gi, '$1 «N»');
+                }
+
+                return text;
             }
 
             // Test if a line is a volatile timestamp or comment
@@ -2236,6 +3041,11 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                     return true;
                 }
 
+                // Case 4: Identical after noise masking (timers / counters / hashes)
+                const maskA = normalizeLine(maskNoise(lineA, rules), rules);
+                const maskB = normalizeLine(maskNoise(lineB, rules), rules);
+                if (maskA === maskB) return true;
+
                 return false;
             }
 
@@ -2283,10 +3093,783 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                 return tokens[0].toLowerCase();
             }
 
+            // ====================================================================
+            // NETWORK PRE/POST-CHECK DIFF ENGINE
+            // Multi-strategy: Section splitting → Engine A (hierarchical config
+            // blocks) / Engine B (key-based tables) / Engine C (LCS + intra-line)
+            // ====================================================================
+
+            function mapPush(map, key, value) {
+                const list = map.get(key);
+                if (list) list.push(value);
+                else map.set(key, [value]);
+            }
+
+            const MAC_TOKEN_RE = /\b(?:[0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4}|(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2})\b/i;
+            const IPV4_TOKEN_RE = /\b(?:\d{1,3}\.){3}\d{1,3}\b/;
+            const IFACE_TOKEN_RE = /^(?:gi|fa|te|tw|hu|et|po|vl|lo|se|tu|bd|bu|mgmt|ma|nve|em|cpu|eth|ethernet|gigabitethernet|fastethernet|tengigabitethernet|fortygigabitethernet|hundredgigabitethernet|port-channel|portchannel|loopback|tunnel|serial|vlan|management|multilink|dialer)[\d/]/i;
+
+            function macToNumber(mac) {
+                const hex = mac.replace(/[^0-9a-fA-F]/g, '');
+                const n = parseInt(hex, 16);
+                return isNaN(n) ? 0 : n;
+            }
+
             // ----------------------------------------------------
-            // Order-Tolerant Table / ARP Alignment Engine
+            // Section Splitting (CLI prompt detection)
             // ----------------------------------------------------
-            function alignTableOrArp(rawOriginal, rawModified, rules) {
+            const CLI_PROMPT_RE = /^([A-Za-z][A-Za-z0-9._:-]{0,58})(?:\(config[^)]*\))?\s*[#>]\s*(\S.*)$/;
+
+            function splitIntoSections(raw) {
+                const lines = raw.split('\n');
+                if (lines.length && lines[lines.length - 1] === '') lines.pop();
+                const sections = [];
+                let current = null;
+                lines.forEach((text, i) => {
+                    const m = text.match(CLI_PROMPT_RE);
+                    if (m && m[2].trim()) {
+                        current = {
+                            id: sections.length, hostname: m[1], command: m[2].trim(),
+                            promptRaw: text, lines: [], startNum: i + 1
+                        };
+                        sections.push(current);
+                    } else if (current) {
+                        current.lines.push({ num: i + 1, text });
+                    } else {
+                        current = { id: sections.length, hostname: null, command: '', promptRaw: null, lines: [{ num: i + 1, text }], startNum: 1 };
+                        sections.push(current);
+                    }
+                });
+                return sections;
+            }
+
+            // ----------------------------------------------------
+            // Strategy Auto-Detection
+            // ----------------------------------------------------
+            const TABLE_COMMAND_RES = [
+                [/show\s+(ip\s+)?arp\b/i, 'arp'],
+                [/show\s+mac\s+address-table/i, 'mac'],
+                [/show\s+ip\s+route/i, 'route'],
+                [/show\s+(ip\s+)?bgp\s+summary/i, 'bgp'],
+                [/show\s+ip\s+ospf\s+neighbor/i, 'ospf'],
+                [/show\s+interfaces?\s+status/i, 'intf']
+            ];
+            const CONFIG_COMMAND_RE = /show\s+(running-config|startup-config|run|start|config)/i;
+
+            function detectProfileId(command, text) {
+                const c = (command || '').toLowerCase();
+                for (const [re, id] of TABLE_COMMAND_RES) {
+                    if (re.test(c)) return id;
+                }
+                const probe = (text || '').slice(0, 4000);
+                if (/Protocol\s+Address\s+Age/m.test(probe)) return 'arp';
+                if (/Vlan\s+Mac\s+Address/m.test(probe)) return 'mac';
+                if (/^Codes:/m.test(probe) || /^Gateway of last resort is/m.test(probe)) return 'route';
+                if (/Neighbor\s+\S+\s+V\s+AS\s+MsgRcvd/m.test(probe)) return 'bgp';
+                if (/Neighbor\s+ID\s+Pri\s+State\s+Dead/m.test(probe)) return 'ospf';
+                if (/Port\s+Name\s+Status\s+Vlan/m.test(probe)) return 'intf';
+                return null;
+            }
+
+            function detectStrategy(command, text) {
+                const c = (command || '').toLowerCase();
+                if (CONFIG_COMMAND_RE.test(c)) return 'config';
+                if (detectProfileId(command, text)) return 'table';
+                if (!command) {
+                    if (detectProfileId('', text)) return 'table';
+                    if (/^\s+\S/m.test(text) && /^(interface |router |hostname |version |line |ip |no |spanning-tree |vlan |vrf |policy-map |route-map |access-list )/m.test(text)) return 'config';
+                }
+                return 'text';
+            }
+
+            // ----------------------------------------------------
+            // Engine B: Key-Based Tabular Diff (TextFSM-style profiles)
+            // ----------------------------------------------------
+            const TABLE_PROFILES = {
+                arp: {
+                    id: 'arp',
+                    label: 'ARP',
+                    parseAll(items, rules) {
+                        const records = [], headers = [], noise = [];
+                        for (const it of items) {
+                            const t = it.text, tr = t.trim();
+                            if (!tr) { noise.push(it); continue; }
+                            const low = tr.toLowerCase();
+                            if (tr.startsWith('!') || tr.startsWith('#')) { headers.push(it); continue; }
+                            if (low.startsWith('protocol') && low.includes('address')) { headers.push(it); continue; }
+                            if (low.startsWith('total ')) { noise.push(it); continue; }
+                            const ipM = tr.match(IPV4_TOKEN_RE);
+                            if (!ipM) { noise.push(it); continue; }
+                            const macM = tr.match(MAC_TOKEN_RE);
+                            const tokens = tr.split(/\s+/);
+                            const ipIdx = tokens.indexOf(ipM[0]);
+                            const macIdx = macM ? tokens.findIndex(tk => tk.toLowerCase() === macM[0].toLowerCase()) : -1;
+                            const rec = { vrf: 'default', ip: ipM[0], mac: macM ? macM[0] : 'Incomplete', age: '', type: '', intf: '', raw: it };
+                            if (ipIdx >= 0 && macIdx > ipIdx) {
+                                rec.age = tokens.slice(ipIdx + 1, macIdx).join(' ');
+                                const after = tokens.slice(macIdx + 1);
+                                if (after.length && !IFACE_TOKEN_RE.test(after[0])) { rec.type = after[0]; rec.intf = after.slice(1).join(' '); }
+                                else rec.intf = after.join(' ');
+                            }
+                            records.push(rec);
+                        }
+                        return { records, headers, noise };
+                    },
+                    keyOf: r => r.vrf.toLowerCase() + '|' + r.ip,
+                    subKeyOf: () => '',
+                    sortVal: r => ipToNumber(r.ip) || 0,
+                    compare(a, b, findings, rowRef) {
+                        const changed = [];
+                        let severity = null;
+                        if (a.mac.toLowerCase() !== b.mac.toLowerCase()) {
+                            changed.push({ field: 'MAC', a: a.mac, b: b.mac });
+                            severity = 'warning';
+                            findings.l2.arpFlips.push({ title: `ARP flip: ${a.ip} MAC ${a.mac} → ${b.mac}`, severity: 'warning', row: rowRef });
+                        }
+                        if (a.intf.toLowerCase() !== b.intf.toLowerCase()) changed.push({ field: 'Interface', a: a.intf, b: b.intf });
+                        if (a.type.toLowerCase() !== b.type.toLowerCase()) changed.push({ field: 'Type', a: a.type, b: b.type });
+                        return { changed, severity };
+                    },
+                    collectSummary(L, R, findings) { findings.l2.arpBefore = L.length; findings.l2.arpAfter = R.length; }
+                },
+
+                mac: {
+                    id: 'mac',
+                    label: 'MAC Table',
+                    parseAll(items, rules) {
+                        const records = [], headers = [], noise = [];
+                        for (const it of items) {
+                            const t = it.text, tr = t.trim();
+                            if (!tr) { noise.push(it); continue; }
+                            const low = tr.toLowerCase();
+                            if (tr.startsWith('!') || tr.startsWith('#')) { headers.push(it); continue; }
+                            if (low.includes('mac address table') || low.startsWith('----') || low.startsWith('total mac') ||
+                                (low.startsWith('vlan') && low.includes('mac'))) { headers.push(it); continue; }
+                            const macM = tr.match(MAC_TOKEN_RE);
+                            if (!macM) { noise.push(it); continue; }
+                            const tokens = tr.split(/\s+/);
+                            const macIdx = tokens.findIndex(tk => tk.toLowerCase() === macM[0].toLowerCase());
+                            const vlan = macIdx > 0 ? tokens[macIdx - 1] : (tokens[0] === '*' ? tokens[1] : tokens[0]);
+                            const after = tokens.slice(macIdx + 1);
+                            records.push({ vrf: 'default', vlan, mac: macM[0], type: after.length ? after[0] : '', ports: after.slice(1).join(' '), raw: it });
+                        }
+                        return { records, headers, noise };
+                    },
+                    keyOf: r => r.vlan.toLowerCase() + '|' + r.mac.toLowerCase(),
+                    subKeyOf: () => '',
+                    sortVal: r => (parseInt(r.vlan, 10) || 9999) * 1e12 + macToNumber(r.mac),
+                    compare(a, b, findings, rowRef) {
+                        const changed = [];
+                        let severity = null;
+                        if (a.ports.toLowerCase() !== b.ports.toLowerCase()) {
+                            changed.push({ field: 'Port', a: a.ports, b: b.ports });
+                            severity = 'warning';
+                            findings.l2.macMoves.push({ title: `MAC move: ${a.mac} (VLAN ${a.vlan}) ${a.ports} → ${b.ports}`, severity: 'warning', row: rowRef });
+                        }
+                        if (a.type.toLowerCase() !== b.type.toLowerCase()) changed.push({ field: 'Type', a: a.type, b: b.type });
+                        return { changed, severity };
+                    }
+                },
+
+                route: {
+                    id: 'route',
+                    label: 'Routing Table',
+                    parseAll(items, rules) {
+                        const records = [], headers = [], noise = [];
+                        let ctxVrf = 'default';
+                        for (const it of items) {
+                            const t = it.text, tr = t.trim();
+                            if (!tr) { noise.push(it); continue; }
+                            const low = tr.toLowerCase();
+                            const vrfM = tr.match(/^Routing Table:\s*(\S+)/i);
+                            if (vrfM) { ctxVrf = vrfM[1]; headers.push(it); continue; }
+                            if (tr.startsWith('!') || tr.startsWith('#') || low.startsWith('codes:')) { headers.push(it); continue; }
+                            if (/^[A-Z*]{1,3}\s+-\s/.test(tr)) { headers.push(it); continue; }
+                            if (low.startsWith('gateway of last resort')) {
+                                records.push({ vrf: ctxVrf, code: 'GOLR', prefix: '0.0.0.0/0', ad: '', metric: '', nexthop: (tr.match(/is\s+(\S+)\s+to/ || [])[1] || ''), uptime: '', intf: '', golr: true, raw: it });
+                                continue;
+                            }
+                            const m = tr.match(/^([A-Za-z*]{1,4})\s+((?:\d{1,3}\.){3}\d{1,3}\/\d{1,2}|[0-9A-Fa-f:]+\/\d{1,3})\s+(.*)$/);
+                            if (!m) { noise.push(it); continue; }
+                            let rest = m[3];
+                            const rec = { vrf: ctxVrf, code: m[1].replace(/\*/g, ''), prefix: m[2], ad: '', metric: '', nexthop: '', uptime: '', intf: '', raw: it };
+                            const br = rest.match(/^\[(\d+)\/(\d+)\]\s*/);
+                            if (br) { rec.ad = br[1]; rec.metric = br[2]; rest = rest.slice(br[0].length); }
+                            const via = rest.match(/^via\s+([0-9A-Fa-f.:]+)/i);
+                            if (via) { rec.nexthop = via[1]; rest = rest.slice(via[0].length).replace(/^\s*,\s*/, ''); }
+                            if (/^is directly connected/i.test(rest)) {
+                                rec.nexthop = 'connected';
+                                const im = rest.match(/,\s*([A-Za-z][^\s,]*)\s*$/);
+                                rec.intf = im ? im[1] : '';
+                            } else {
+                                const segs = rest.split(',').map(s => s.trim()).filter(Boolean);
+                                if (segs.length >= 2) { rec.uptime = segs[0]; rec.intf = segs[segs.length - 1]; }
+                                else if (segs.length === 1) {
+                                    if (IFACE_TOKEN_RE.test(segs[0])) rec.intf = segs[0];
+                                    else rec.uptime = segs[0];
+                                }
+                            }
+                            records.push(rec);
+                        }
+                        return { records, headers, noise };
+                    },
+                    keyOf: r => r.vrf.toLowerCase() + '|' + r.prefix.toLowerCase(),
+                    subKeyOf: r => r.nexthop.toLowerCase(),
+                    sortVal: r => {
+                        const parts = r.prefix.split('/');
+                        const n = ipToNumber(parts[0]);
+                        return (n === null ? 0 : n) * 32 + (parseInt(parts[1], 10) || 0);
+                    },
+                    compare(a, b, findings, rowRef) {
+                        const changed = [];
+                        let severity = null;
+                        if (a.nexthop.toLowerCase() !== b.nexthop.toLowerCase()) {
+                            changed.push({ field: 'Next-Hop', a: a.nexthop, b: b.nexthop });
+                            severity = 'warning';
+                            const vrf = a.vrf !== 'default' ? a.vrf + ' / ' : '';
+                            findings.routes.nextHopShifts.push({ title: `Next-hop shift: ${vrf}${a.prefix} via ${a.nexthop} → ${b.nexthop}`, severity: 'warning', row: rowRef });
+                        }
+                        if (a.code.toLowerCase() !== b.code.toLowerCase()) changed.push({ field: 'Protocol', a: a.code, b: b.code });
+                        if (a.ad !== b.ad) changed.push({ field: 'AD', a: a.ad, b: b.ad });
+                        if (a.metric !== b.metric) changed.push({ field: 'Metric', a: a.metric, b: b.metric });
+                        if (a.intf.toLowerCase() !== b.intf.toLowerCase()) changed.push({ field: 'Interface', a: a.intf, b: b.intf });
+                        return { changed, severity };
+                    },
+                    onRemoved(rec, findings, row) {
+                        row.severity = 'critical';
+                        const vrf = rec.vrf !== 'default' ? rec.vrf + ' / ' : '';
+                        findings.routes.missing.push({ title: `Missing route: ${vrf}${rec.prefix} via ${rec.nexthop || 'connected'} (${rec.code})`, severity: 'critical', row });
+                    },
+                    onAdded(rec, findings, row) {
+                        const vrf = rec.vrf !== 'default' ? rec.vrf + ' / ' : '';
+                        findings.routes.added.push({ title: `New route: ${vrf}${rec.prefix} via ${rec.nexthop || 'connected'} (${rec.code})`, severity: 'info', row });
+                    },
+                    collectSummary(L, R, findings) {
+                        findings.routes.before = L.filter(r => !r.golr).length;
+                        findings.routes.after = R.filter(r => !r.golr).length;
+                    }
+                },
+
+                bgp: {
+                    id: 'bgp',
+                    label: 'BGP Summary',
+                    parseAll(items, rules) {
+                        const records = [], headers = [], noise = [];
+                        let vrf = 'default';
+                        for (const it of items) {
+                            const t = it.text, tr = t.trim();
+                            if (!tr) { noise.push(it); continue; }
+                            const low = tr.toLowerCase();
+                            const vrfM = tr.match(/for VRF\s+(\S+?),?/i);
+                            if (vrfM) { vrf = vrfM[1]; headers.push(it); continue; }
+                            if (tr.startsWith('!') || tr.startsWith('#')) { headers.push(it); continue; }
+                            if (low.startsWith('bgp router identifier') || (low.startsWith('neighbor') && low.includes('state/pfxrcd'))) { headers.push(it); continue; }
+                            const ipM = tr.match(IPV4_TOKEN_RE);
+                            if (!ipM) { noise.push(it); continue; }
+                            const tokens = tr.split(/\s+/);
+                            let state = 'Established', pfx = '', updown = '';
+                            const last = tokens[tokens.length - 1];
+                            if (/^\d+$/.test(last)) {
+                                pfx = last; updown = tokens[tokens.length - 2] || '';
+                            } else if (last.startsWith('(')) {
+                                state = tokens.slice(tokens.length - 2).join(' ');
+                                updown = tokens[tokens.length - 3] || '';
+                            } else {
+                                state = last; updown = tokens[tokens.length - 2] || '';
+                            }
+                            records.push({ vrf, neighbor: ipM[0], peerAs: tokens[2] || '', updown, state, pfx, raw: it });
+                        }
+                        return { records, headers, noise };
+                    },
+                    keyOf: r => r.vrf.toLowerCase() + '|' + r.neighbor,
+                    subKeyOf: () => '',
+                    sortVal: r => ipToNumber(r.neighbor) || 0,
+                    compare(a, b, findings, rowRef) {
+                        const changed = [];
+                        let severity = null;
+                        if (a.peerAs !== b.peerAs) changed.push({ field: 'AS', a: a.peerAs, b: b.peerAs });
+                        const stateA = a.state + (a.pfx !== '' ? ` (${a.pfx} pfx)` : '');
+                        const stateB = b.state + (b.pfx !== '' ? ` (${b.pfx} pfx)` : '');
+                        if (stateA !== stateB) {
+                            changed.push({ field: 'State/Pfx', a: stateA, b: stateB });
+                            const aUp = a.state === 'Established';
+                            const bUp = b.state === 'Established';
+                            if (aUp && !bUp) {
+                                severity = 'critical';
+                                findings.adjacency.push({ proto: 'BGP', title: `${a.neighbor} dropped: Established → ${b.state}`, severity: 'critical', row: rowRef });
+                            } else if (!aUp && bUp) {
+                                findings.adjacency.push({ proto: 'BGP', title: `${a.neighbor} came up: ${a.state} → Established (${b.pfx} pfx)`, severity: 'info', row: rowRef });
+                            } else if (aUp && bUp) {
+                                findings.adjacency.push({ proto: 'BGP', title: `${a.neighbor} prefix count ${a.pfx} → ${b.pfx}`, severity: 'info', row: rowRef });
+                            } else if (a.state !== b.state) {
+                                severity = severity || 'warning';
+                                findings.adjacency.push({ proto: 'BGP', title: `${a.neighbor} state ${a.state} → ${b.state}`, severity: 'warning', row: rowRef });
+                            }
+                        }
+                        return { changed, severity };
+                    },
+                    onRemoved(rec, findings, row) {
+                        row.severity = 'critical';
+                        findings.adjacency.push({ proto: 'BGP', title: `Neighbor ${rec.neighbor} missing post-check`, severity: 'critical', row });
+                    }
+                },
+
+                ospf: {
+                    id: 'ospf',
+                    label: 'OSPF Neighbors',
+                    parseAll(items, rules) {
+                        const records = [], headers = [], noise = [];
+                        for (const it of items) {
+                            const t = it.text, tr = t.trim();
+                            if (!tr) { noise.push(it); continue; }
+                            const low = tr.toLowerCase();
+                            if (tr.startsWith('!') || tr.startsWith('#')) { headers.push(it); continue; }
+                            if ((low.startsWith('neighbor') && low.includes('dead time')) || low.startsWith('neighbor id')) { headers.push(it); continue; }
+                            const tokens = tr.split(/\s+/);
+                            if (tokens.length < 5 || !IPV4_TOKEN_RE.test(tokens[0])) { noise.push(it); continue; }
+                            records.push({ vrf: 'default', nid: tokens[0], pri: tokens[1], state: tokens[2], dead: tokens[3], addr: tokens[4], intf: tokens.slice(5).join(' '), raw: it });
+                        }
+                        return { records, headers, noise };
+                    },
+                    keyOf: r => r.vrf.toLowerCase() + '|' + r.nid,
+                    subKeyOf: () => '',
+                    sortVal: r => ipToNumber(r.nid) || 0,
+                    compare(a, b, findings, rowRef) {
+                        const changed = [];
+                        let severity = null;
+                        if (a.state.toUpperCase() !== b.state.toUpperCase()) {
+                            changed.push({ field: 'State', a: a.state, b: b.state });
+                            const aFull = a.state.toUpperCase().startsWith('FULL');
+                            const bFull = b.state.toUpperCase().startsWith('FULL');
+                            if (aFull && !bFull) {
+                                severity = 'critical';
+                                findings.adjacency.push({ proto: 'OSPF', title: `${a.nid} dropped: ${a.state} → ${b.state}`, severity: 'critical', row: rowRef });
+                            } else if (!aFull && bFull) {
+                                findings.adjacency.push({ proto: 'OSPF', title: `${a.nid} reached FULL (was ${a.state})`, severity: 'info', row: rowRef });
+                            } else {
+                                severity = severity || 'warning';
+                                findings.adjacency.push({ proto: 'OSPF', title: `${a.nid} state ${a.state} → ${b.state}`, severity: 'warning', row: rowRef });
+                            }
+                        }
+                        if (a.pri !== b.pri) changed.push({ field: 'Pri', a: a.pri, b: b.pri });
+                        if (a.intf.toLowerCase() !== b.intf.toLowerCase()) changed.push({ field: 'Interface', a: a.intf, b: b.intf });
+                        return { changed, severity };
+                    },
+                    onRemoved(rec, findings, row) {
+                        row.severity = 'critical';
+                        findings.adjacency.push({ proto: 'OSPF', title: `Neighbor ${rec.nid} missing post-check`, severity: 'critical', row });
+                    }
+                },
+
+                intf: {
+                    id: 'intf',
+                    label: 'Interface Status',
+                    parseAll(items, rules) {
+                        const records = [], headers = [], noise = [];
+                        const STATUS_WORDS = ['connected', 'notconnect', 'notconnected', 'disabled', 'err-disabled', 'monitoring', 'inactive'];
+                        for (const it of items) {
+                            const t = it.text, tr = t.trim();
+                            if (!tr) { noise.push(it); continue; }
+                            const low = tr.toLowerCase();
+                            if (tr.startsWith('!') || tr.startsWith('#')) { headers.push(it); continue; }
+                            if (low.startsWith('port') && (low.includes('status') || low.includes('name'))) { headers.push(it); continue; }
+                            const tokens = tr.split(/\s+/);
+                            if (tokens.length < 2) { noise.push(it); continue; }
+                            const sIdx = tokens.findIndex((tk, i) => i > 0 && STATUS_WORDS.includes(tk.toLowerCase()));
+                            if (sIdx === -1) { noise.push(it); continue; }
+                            records.push({
+                                port: tokens[0],
+                                name: tokens.slice(1, sIdx).join(' '),
+                                status: tokens[sIdx],
+                                vlan: tokens[sIdx + 1] || '',
+                                duplex: tokens[sIdx + 2] || '',
+                                speed: tokens[sIdx + 3] || '',
+                                type: tokens.slice(sIdx + 4).join(' '),
+                                raw: it
+                            });
+                        }
+                        return { records, headers, noise };
+                    },
+                    keyOf: r => r.port.toLowerCase(),
+                    subKeyOf: () => '',
+                    sortVal: () => 0,
+                    compare(a, b, findings, rowRef) {
+                        const changed = [];
+                        let severity = null;
+                        if (a.status.toLowerCase() !== b.status.toLowerCase()) {
+                            changed.push({ field: 'Status', a: a.status, b: b.status });
+                            if (a.status.toLowerCase() === 'connected' && b.status.toLowerCase() !== 'connected') {
+                                severity = 'warning';
+                                findings.intfChanges.push({ title: `${a.port} went down: ${a.status} → ${b.status}`, severity: 'warning', row: rowRef });
+                            }
+                        }
+                        if (a.vlan.toLowerCase() !== b.vlan.toLowerCase()) changed.push({ field: 'Vlan', a: a.vlan, b: b.vlan });
+                        if (a.speed.toLowerCase() !== b.speed.toLowerCase()) changed.push({ field: 'Speed', a: a.speed, b: b.speed });
+                        if (a.duplex.toLowerCase() !== b.duplex.toLowerCase()) changed.push({ field: 'Duplex', a: a.duplex, b: b.duplex });
+                        if (a.name !== b.name) changed.push({ field: 'Name', a: a.name, b: b.name });
+                        return { changed, severity };
+                    }
+                },
+
+                generic: { id: 'generic', label: 'Table', legacy: true }
+            };
+
+            function canonicalRecText(rec, rules) {
+                return normalizeForComparison(rec.raw.text, rules);
+            }
+
+            function alignTabular(itemsL, itemsR, profile, rules, findings) {
+                if (!profile || profile.legacy) {
+                    return alignGenericTable(
+                        itemsL.map(i => i.text).join('\n'),
+                        itemsR.map(i => i.text).join('\n'),
+                        rules
+                    );
+                }
+
+                const L = profile.parseAll(itemsL, rules);
+                const R = profile.parseAll(itemsR, rules);
+                if (profile.collectSummary) profile.collectSummary(L.records, R.records, findings);
+
+                const rows = [];
+
+                // Header lines (paired in order at the top)
+                const maxH = Math.max(L.headers.length, R.headers.length);
+                for (let i = 0; i < maxH; i++) {
+                    const l = L.headers[i] || null, r = R.headers[i] || null;
+                    if (!l && !r) continue;
+                    const same = !!(l && r && normalizeForComparison(l.text, rules) === normalizeForComparison(r.text, rules));
+                    rows.push({
+                        leftNum: l ? l.num : null, leftText: l ? l.text : null,
+                        rightNum: r ? r.num : null, rightText: r ? r.text : null,
+                        type: same ? 'same' : 'modified',
+                        isUnimportant: same ? false : !!(l && r && checkUnimportance(l.text, r.text, rules)),
+                        isChangePair: !!(l && r), classification: null, severity: null
+                    });
+                }
+
+                // Order-independent record matching by composite primary key
+                const rightByKey = new Map();
+                for (const rec of R.records) mapPush(rightByKey, profile.keyOf(rec), rec);
+                const usedRight = new Set();
+                const matched = [], removedL = [];
+
+                for (const lrec of L.records) {
+                    const cands = (rightByKey.get(profile.keyOf(lrec)) || []).filter(c => !usedRight.has(c));
+                    const lcanon = canonicalRecText(lrec, rules);
+                    let m = cands.find(c => canonicalRecText(c, rules) === lcanon);
+                    if (!m) {
+                        const sub = profile.subKeyOf(lrec);
+                        m = cands.find(c => profile.subKeyOf(c) === sub);
+                    }
+                    if (!m) m = cands[0];
+                    if (m) {
+                        usedRight.add(m);
+                        matched.push({ l: lrec, r: m, status: canonicalRecText(m, rules) === lcanon ? 'unchanged' : 'modified' });
+                    } else {
+                        removedL.push(lrec);
+                    }
+                }
+                const addedR = R.records.filter(c => !usedRight.has(c));
+
+                const dataRows = [];
+
+                for (const p of matched) {
+                    const a = p.l, b = p.r;
+                    const row = {
+                        leftNum: a.raw.num, leftText: a.raw.text,
+                        rightNum: b.raw.num, rightText: b.raw.text,
+                        type: 'same', isUnimportant: false, isChangePair: true,
+                        classification: 'UNCHANGED', severity: null,
+                        _sort: profile.sortVal(a), _sub: profile.subKeyOf(a), _txt: a.raw.text
+                    };
+                    if (p.status === 'modified') {
+                        const res = profile.compare(a, b, findings, row);
+                        row.classification = 'MODIFIED';
+                        row.type = 'modified';
+                        row.severity = res.severity || null;
+                        row.changedFields = res.changed;
+                    } else if (a.raw.text !== b.raw.text) {
+                        // Only volatile noise differs → identical with unimportant differences
+                        row.isUnimportant = true;
+                        row.type = rules.ignoreUnimportant ? 'same' : 'modified';
+                    }
+                    dataRows.push(row);
+                }
+
+                for (const rec of removedL) {
+                    const row = {
+                        leftNum: rec.raw.num, leftText: rec.raw.text,
+                        rightNum: null, rightText: null,
+                        type: 'removed', isUnimportant: false, isChangePair: false,
+                        classification: 'REMOVED', severity: null,
+                        _sort: profile.sortVal(rec), _sub: profile.subKeyOf(rec), _txt: rec.raw.text
+                    };
+                    if (profile.onRemoved) profile.onRemoved(rec, findings, row);
+                    dataRows.push(row);
+                }
+
+                for (const rec of addedR) {
+                    const row = {
+                        leftNum: null, leftText: null,
+                        rightNum: rec.raw.num, rightText: rec.raw.text,
+                        type: 'added', isUnimportant: false, isChangePair: false,
+                        classification: 'ADDED', severity: null,
+                        _sort: profile.sortVal(rec), _sub: profile.subKeyOf(rec), _txt: rec.raw.text
+                    };
+                    if (profile.onAdded) profile.onAdded(rec, findings, row);
+                    dataRows.push(row);
+                }
+
+                const rank = { UNCHANGED: 0, MODIFIED: 1, REMOVED: 2, ADDED: 3 };
+                dataRows.sort((x, y) =>
+                    (x._sort - y._sort) ||
+                    x._sub.localeCompare(y._sub) ||
+                    x._txt.localeCompare(y._txt, undefined, { numeric: true }) ||
+                    (rank[x.classification] - rank[y.classification])
+                );
+                dataRows.forEach(r => { delete r._sort; delete r._sub; delete r._txt; rows.push(r); });
+
+                // Non-record lines (blanks, totals) as a small text diff tail
+                if (L.noise.length || R.noise.length) {
+                    rows.push(...pairFlatCore(L.noise, R.noise, rules).rows);
+                }
+
+                return rows;
+            }
+
+            // ----------------------------------------------------
+            // Engine A: Hierarchical Block Diff (configurations)
+            // ----------------------------------------------------
+            const BLOCK_HEADER_RE = /^(interface|router|route-map|policy-map|class-map|ip access-list|ipv6 access-list|vrf definition|vrf context|line|controller|redundancy|crypto map|banner|dial-peer|voice service|control-plane|address-family|template|track|object-group|parameter-map|monitor session|key chain|ip vrf|mac access-list|policy)\b/i;
+
+            function parseIndentLines(items) {
+                return items.map(it => {
+                    const indent = (it.text.match(/^[ \t]*/)[0]).replace(/\t/g, '    ').length;
+                    return { num: it.num, text: it.text, trimmed: it.text.trim(), indent };
+                });
+            }
+
+            function looksLikeBlockHeader(ln, next) {
+                if (!next || next.indent <= ln.indent) return false;
+                if (ln.trimmed.endsWith('{')) return true;
+                return BLOCK_HEADER_RE.test(ln.trimmed);
+            }
+
+            function buildBlockTree(lines) {
+                let i = 0;
+                function build(parentIndent) {
+                    const nodes = [];
+                    while (i < lines.length) {
+                        const ln = lines[i];
+                        if (ln.indent <= parentIndent) break;
+                        const next = lines[i + 1];
+                        if (next && next.indent > ln.indent && looksLikeBlockHeader(ln, next)) {
+                            const node = { line: ln, children: [] };
+                            i++;
+                            node.children = build(ln.indent);
+                            nodes.push(node);
+                        } else {
+                            nodes.push({ line: ln, children: null });
+                            i++;
+                        }
+                    }
+                    return nodes;
+                }
+                return build(-1);
+            }
+
+            function blockKey(line) {
+                return line.trimmed.toLowerCase().replace(/\s+/g, ' ').replace(/\{$/, '').trim();
+            }
+
+            function blockCanon(line, rules) {
+                return normalizeForComparison(line.text, rules);
+            }
+
+            let blockPathCounter = 0;
+
+            // Engine C core: LCS pairing of two line lists with positional
+            // pairing of the non-matching remainder + noise classification.
+            function pairFlatCore(lLines, rLines, rules) {
+                const rows = [];
+                const remQueue = [], addQueue = [];
+                let li = 0, ri = 0;
+
+                const flushPairs = () => {
+                    while (remQueue.length && addQueue.length) {
+                        const l = remQueue.shift(), r = addQueue.shift();
+                        const unimp = checkUnimportance(l.text, r.text, rules);
+                        let type = 'modified';
+                        if (unimp && rules.ignoreUnimportant) type = 'same';
+                        rows.push({ leftNum: l.num, leftText: l.text, rightNum: r.num, rightText: r.text, type, isUnimportant: unimp, isChangePair: true, classification: null, severity: null });
+                    }
+                    while (remQueue.length) {
+                        const l = remQueue.shift();
+                        let type = 'removed', isUnimp = false;
+                        if (rules.ignoreBlankLines && !l.text.trim()) type = 'same';
+                        else if ((rules.ignoreComments && isCommentLine(l.text)) || (rules.ignoreTimestamps && isVolatileLine(l.text))) {
+                            isUnimp = true;
+                            if (rules.ignoreUnimportant) type = 'same';
+                        }
+                        rows.push({ leftNum: l.num, leftText: l.text, rightNum: null, rightText: null, type, isUnimportant: isUnimp, isChangePair: false, classification: null, severity: null });
+                    }
+                    while (addQueue.length) {
+                        const r = addQueue.shift();
+                        let type = 'added', isUnimp = false;
+                        if (rules.ignoreBlankLines && !r.text.trim()) type = 'same';
+                        else if ((rules.ignoreComments && isCommentLine(r.text)) || (rules.ignoreTimestamps && isVolatileLine(r.text))) {
+                            isUnimp = true;
+                            if (rules.ignoreUnimportant) type = 'same';
+                        }
+                        rows.push({ leftNum: null, leftText: null, rightNum: r.num, rightText: r.text, type, isUnimportant: isUnimp, isChangePair: false, classification: null, severity: null });
+                    }
+                };
+
+                let parts;
+                try {
+                    parts = Diff.diffArrays(
+                        lLines.map(l => normalizeForComparison(l.text, rules)),
+                        rLines.map(r => normalizeForComparison(r.text, rules))
+                    );
+                } catch (e) {
+                    parts = [{ count: lLines.length, removed: true }, { count: rLines.length, added: true }];
+                }
+
+                for (const part of parts) {
+                    if (part.added) {
+                        for (let k = 0; k < part.count; k++) addQueue.push(rLines[ri++]);
+                        flushPairs();
+                    } else if (part.removed) {
+                        for (let k = 0; k < part.count; k++) remQueue.push(lLines[li++]);
+                    } else {
+                        flushPairs();
+                        for (let k = 0; k < part.count; k++, li++, ri++) {
+                            rows.push({ leftNum: lLines[li].num, leftText: lLines[li].text, rightNum: rLines[ri].num, rightText: rLines[ri].text, type: 'same', isUnimportant: false, isChangePair: false, classification: null, severity: null });
+                        }
+                    }
+                }
+                flushPairs();
+                return { rows, rightConsumed: ri };
+            }
+
+            function diffBlock(nL, nR, rules, rows, depth, ancestors) {
+                const ownPath = 'b' + (blockPathCounter++);
+                const chain = [...ancestors, ownPath];
+                const sameHeader = blockCanon(nL.line, rules) === blockCanon(nR.line, rules);
+                let type = 'modified', isUnimp = false;
+                if (sameHeader) {
+                    type = 'same';
+                } else {
+                    isUnimp = checkUnimportance(nL.line.text, nR.line.text, rules);
+                    if (isUnimp && rules.ignoreUnimportant) type = 'same';
+                }
+                rows.push({
+                    leftNum: nL.line.num, leftText: nL.line.text,
+                    rightNum: nR.line.num, rightText: nR.line.text,
+                    type, isUnimportant: sameHeader ? false : isUnimp, isChangePair: true,
+                    isBlockHeader: true, depth, ancestors: chain, classification: null, severity: null
+                });
+                alignNodeLists(nL.children, nR.children, rules, rows, depth + 1, chain, ownPath);
+            }
+
+            function emitBlockLines(node, type, rules, rows, depth, ancestors) {
+                const ownPath = 'b' + (blockPathCounter++);
+                const chain = [...ancestors, ownPath];
+                const isRem = type === 'removed';
+                const headLine = node.line;
+                rows.push({
+                    leftNum: isRem ? headLine.num : null, leftText: isRem ? headLine.text : null,
+                    rightNum: isRem ? null : headLine.num, rightText: isRem ? null : headLine.text,
+                    type, isUnimportant: false, isChangePair: false,
+                    isBlockHeader: true, depth, ancestors: chain, classification: null, severity: null
+                });
+                for (const ch of node.children) {
+                    if (ch.children) {
+                        emitBlockLines(ch, type, rules, rows, depth + 1, chain);
+                    } else {
+                        rows.push({
+                            leftNum: isRem ? ch.line.num : null, leftText: isRem ? ch.line.text : null,
+                            rightNum: isRem ? null : ch.line.num, rightText: isRem ? null : ch.line.text,
+                            type, isUnimportant: false, isChangePair: false,
+                            depth, ancestors: chain, classification: null, severity: null
+                        });
+                    }
+                }
+            }
+
+            function alignNodeLists(childrenL, childrenR, rules, rows, depth, ancestors, myPath) {
+                const hereAncestors = [...ancestors, myPath];
+
+                // Pair ALL flat lines of this level with one global LCS so that
+                // early runs cannot steal lines belonging to later positions.
+                const flatL = childrenL.filter(n => !n.children).map(n => n.line);
+                const flatR = childrenR.filter(n => !n.children).map(n => n.line);
+                const flatRows = (flatL.length || flatR.length) ? pairFlatCore(flatL, flatR, rules).rows : [];
+                const rowByLeftNum = new Map();
+                const addedFlatRows = [];
+                for (const r of flatRows) {
+                    if (r.leftNum !== null && r.leftText !== null) rowByLeftNum.set(r.leftNum, r);
+                    if (r.leftNum === null && r.rightNum !== null) addedFlatRows.push(r);
+                }
+
+                const rightBlocksByKey = new Map();
+                for (const n of childrenR) {
+                    if (n.children) mapPush(rightBlocksByKey, blockKey(n.line), n);
+                }
+                const usedR = new Set();
+
+                for (const nL of childrenL) {
+                    if (!nL.children) {
+                        const r = rowByLeftNum.get(nL.line.num);
+                        if (r) { r.depth = depth; r.ancestors = hereAncestors; rows.push(r); }
+                        continue;
+                    }
+                    const cands = (rightBlocksByKey.get(blockKey(nL.line)) || []).filter(c => !usedR.has(c));
+                    const canon = blockCanon(nL.line, rules);
+                    const m = cands.find(c => blockCanon(c.line, rules) === canon) || cands[0];
+                    if (m) {
+                        usedR.add(m);
+                        diffBlock(nL, m, rules, rows, depth, hereAncestors);
+                    } else {
+                        emitBlockLines(nL, 'removed', rules, rows, depth, hereAncestors);
+                    }
+                }
+
+                // Blocks that exist only on the right side
+                for (const n of childrenR) {
+                    if (n.children && !usedR.has(n)) emitBlockLines(n, 'added', rules, rows, depth, hereAncestors);
+                }
+                // Flat lines that exist only on the right side
+                for (const r of addedFlatRows) {
+                    r.depth = depth;
+                    r.ancestors = hereAncestors;
+                    rows.push(r);
+                }
+            }
+
+            function alignHierarchical(itemsL, itemsR, rules) {
+                blockPathCounter = 0;
+                const treeL = buildBlockTree(parseIndentLines(itemsL));
+                const treeR = buildBlockTree(parseIndentLines(itemsR));
+                const rows = [];
+                alignNodeLists(treeL, treeR, rules, rows, 0, [], 'root');
+                return rows;
+            }
+
+            function emptyFindings() {
+                return {
+                    routes: { before: 0, after: 0, missing: [], added: [], nextHopShifts: [] },
+                    adjacency: [],
+                    l2: { arpFlips: [], macMoves: [], arpBefore: 0, arpAfter: 0 },
+                    intfChanges: []
+                };
+            }
+
+            // ----------------------------------------------------
+            // Generic Table Fallback (order-tolerant key alignment)
+            // ----------------------------------------------------
+            function alignGenericTable(rawOriginal, rawModified, rules) {
                 const origLinesRaw = rawOriginal.split('\n');
                 if (rawOriginal.endsWith('\n')) origLinesRaw.pop();
 
@@ -2495,8 +4078,74 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
             }
 
             // ----------------------------------------------------
-            // Main Comparison Execution
+            // Main Comparison Execution (multi-strategy orchestrator)
             // ----------------------------------------------------
+            function oneSidedRows(items, type) {
+                const isRem = type === 'removed';
+                return items.map(it => ({
+                    leftNum: isRem ? it.num : null, leftText: isRem ? it.text : null,
+                    rightNum: isRem ? null : it.num, rightText: isRem ? null : it.text,
+                    type, isUnimportant: false, isChangePair: false, classification: null, severity: null
+                }));
+            }
+
+            function pushSectionHeaderRow(secL, secR, rules, strategy) {
+                const sec = secL || secR;
+                if (!sec.command) return;
+                const lText = secL ? secL.promptRaw : null;
+                const rText = secR ? secR.promptRaw : null;
+                const same = lText !== null && rText !== null &&
+                    normalizeForComparison(lText, rules) === normalizeForComparison(rText, rules);
+                alignedLinesData.push({
+                    isSectionHeader: true, strategy,
+                    leftNum: secL ? secL.startNum : null, leftText: lText,
+                    rightNum: secR ? secR.startNum : null, rightText: rText,
+                    type: same ? 'same' : (secL ? (secR ? 'modified' : 'removed') : 'added'),
+                    isUnimportant: false, isChangePair: !!(secL && secR),
+                    classification: null, severity: null, ancestors: [], depth: 0
+                });
+            }
+
+            function runSectionDiff(secL, secR, rules, findings) {
+                const sec = secL || secR;
+                const bodyL = secL ? secL.lines.map(l => l.text).join('\n') : '';
+                const bodyR = secR ? secR.lines.map(l => l.text).join('\n') : '';
+                const strategy = currentAlignMode === 'auto'
+                    ? detectStrategy(sec.command, bodyL || bodyR)
+                    : currentAlignMode;
+
+                pushSectionHeaderRow(secL, secR, rules, strategy);
+
+                let rows = [];
+                const itemsL = secL ? secL.lines : [];
+                const itemsR = secR ? secR.lines : [];
+
+                if (!secL || !secR) {
+                    rows = oneSidedRows(secL ? itemsL : itemsR, secL ? 'removed' : 'added');
+                } else if (strategy === 'config') {
+                    rows = alignHierarchical(itemsL, itemsR, rules);
+                } else if (strategy === 'table') {
+                    const pid = detectProfileId(sec.command, bodyL || bodyR);
+                    const profile = (pid && TABLE_PROFILES[pid]) || TABLE_PROFILES.generic;
+                    rows = alignTabular(itemsL, itemsR, profile, rules, findings);
+                } else {
+                    rows = pairFlatCore(itemsL, itemsR, rules).rows;
+                }
+
+                for (const r of rows) {
+                    r.idx = alignedLinesData.length;
+                    alignedLinesData.push(r);
+                }
+            }
+
+            function buildPatchText(rawOriginal, rawModified) {
+                try {
+                    return Diff.createTwoFilesPatch('before', 'after', rawOriginal, rawModified, '', '');
+                } catch (e) {
+                    return '';
+                }
+            }
+
             function executeCompare() {
                 const t0 = performance.now();
                 const rawOriginal = originalInput.value;
@@ -2508,151 +4157,52 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                 }
 
                 const rules = getRules();
+                expandedFolds.clear();
+                alignedLinesData = [];
+                currentFindings = emptyFindings();
 
-                if (currentAlignMode === 'table') {
-                    // Use Order-Tolerant Table / ARP Alignment
-                    alignedLinesData = alignTableOrArp(rawOriginal, rawModified, rules);
+                const secL = splitIntoSections(rawOriginal);
+                const secR = splitIntoSections(rawModified);
+                const hasPrompts = secL.some(s => s.command) || secR.some(s => s.command);
+
+                if (currentAlignMode !== 'auto') {
+                    // Forced strategy over the whole inputs
+                    const forceSec = (raw) => {
+                        const lines = raw.split('\n');
+                        if (lines.length && lines[lines.length - 1] === '') lines.pop();
+                        return { id: 0, hostname: null, command: '', promptRaw: null, lines: lines.map((text, i) => ({ num: i + 1, text })), startNum: 1 };
+                    };
+                    runSectionDiff(forceSec(rawOriginal), forceSec(rawModified), rules, currentFindings);
+                } else if (!hasPrompts) {
+                    // No CLI prompts: auto-detect one strategy for the whole text
+                    runSectionDiff(secL[0] || { id: 0, command: '', lines: [], startNum: 1 }, secR[0] || { id: 0, command: '', lines: [], startNum: 1 }, rules, currentFindings);
                 } else {
-                    // Sequential Line-level diff with jsdiff
-                    const diffResult = Diff.diffLines(rawOriginal, rawModified, {
-                        newlineIsToken: false,
-                        ignoreWhitespace: false
-                    });
+                    // Merge sections by normalized command
+                    const normCmd = c => c.toLowerCase().replace(/\s+/g, ' ').trim();
+                    const mapR = new Map();
+                    secR.forEach(s => { if (s.command) mapR.set(normCmd(s.command), s); });
+                    const usedR = new Set();
+                    const preL = secL.filter(s => !s.command);
+                    const preR = secR.filter(s => !s.command);
 
-                    alignedLinesData = [];
-                    let leftLineNum = 1;
-                    let rightLineNum = 1;
-                    let i = 0;
-
-                    while (i < diffResult.length) {
-                        const part = diffResult[i];
-
-                        if (part.removed) {
-                            // Check if immediately followed by added (Change block)
-                            if (i + 1 < diffResult.length && diffResult[i + 1].added) {
-                                const removedPart = part;
-                                const addedPart = diffResult[i + 1];
-
-                                const remLines = removedPart.value.split('\n');
-                                if (removedPart.value.endsWith('\n')) remLines.pop();
-
-                                const addLines = addedPart.value.split('\n');
-                                if (addedPart.value.endsWith('\n')) addLines.pop();
-
-                                const maxLen = Math.max(remLines.length, addLines.length);
-
-                                for (let j = 0; j < maxLen; j++) {
-                                    const hasLeft = j < remLines.length;
-                                    const hasRight = j < addLines.length;
-                                    const lText = hasLeft ? remLines[j] : null;
-                                    const rText = hasRight ? addLines[j] : null;
-
-                                    let type = 'modified';
-                                    let isUnimportant = false;
-
-                                    if (hasLeft && hasRight) {
-                                        isUnimportant = checkUnimportance(lText, rText, rules);
-                                        if (isUnimportant && rules.ignoreUnimportant) {
-                                            type = 'same';
-                                        }
-                                    } else if (hasLeft) {
-                                        if (rules.ignoreBlankLines && lText.trim() === '') {
-                                            type = 'same';
-                                        } else {
-                                            type = 'removed';
-                                        }
-                                    } else if (hasRight) {
-                                        if (rules.ignoreBlankLines && rText.trim() === '') {
-                                            type = 'same';
-                                        } else {
-                                            type = 'added';
-                                        }
-                                    }
-
-                                    alignedLinesData.push({
-                                        leftNum: hasLeft ? leftLineNum++ : null,
-                                        leftText: lText,
-                                        rightNum: hasRight ? rightLineNum++ : null,
-                                        rightText: rText,
-                                        type: type, // 'same' | 'added' | 'removed' | 'modified'
-                                        isUnimportant: isUnimportant,
-                                        isChangePair: hasLeft && hasRight
-                                    });
-                                }
-                                i += 2;
-                            } else {
-                                // Purely removed block
-                                const remLines = part.value.split('\n');
-                                if (part.value.endsWith('\n')) remLines.pop();
-
-                                remLines.forEach(line => {
-                                    const isBlank = rules.ignoreBlankLines && line.trim() === '';
-                                    const isUnimp = (rules.ignoreComments && isCommentLine(line)) ||
-                                        (rules.ignoreTimestamps && isVolatileLine(line));
-
-                                    let type = 'removed';
-                                    if (isBlank || (isUnimp && rules.ignoreUnimportant)) {
-                                        type = 'same';
-                                    }
-
-                                    alignedLinesData.push({
-                                        leftNum: leftLineNum++,
-                                        leftText: line,
-                                        rightNum: null,
-                                        rightText: null,
-                                        type: type,
-                                        isUnimportant: isUnimp,
-                                        isChangePair: false
-                                    });
-                                });
-                                i++;
-                            }
-                        } else if (part.added) {
-                            // Purely added block
-                            const addLines = part.value.split('\n');
-                            if (part.value.endsWith('\n')) addLines.pop();
-
-                            addLines.forEach(line => {
-                                const isBlank = rules.ignoreBlankLines && line.trim() === '';
-                                const isUnimp = (rules.ignoreComments && isCommentLine(line)) ||
-                                    (rules.ignoreTimestamps && isVolatileLine(line));
-
-                                let type = 'added';
-                                if (isBlank || (isUnimp && rules.ignoreUnimportant)) {
-                                    type = 'same';
-                                }
-
-                                alignedLinesData.push({
-                                    leftNum: null,
-                                    leftText: null,
-                                    rightNum: rightLineNum++,
-                                    rightText: line,
-                                    type: type,
-                                    isUnimportant: isUnimp,
-                                    isChangePair: false
-                                });
-                            });
-                            i++;
-                        } else {
-                            // Unchanged (Identical lines)
-                            const sameLines = part.value.split('\n');
-                            if (part.value.endsWith('\n')) sameLines.pop();
-
-                            sameLines.forEach(line => {
-                                alignedLinesData.push({
-                                    leftNum: leftLineNum++,
-                                    leftText: line,
-                                    rightNum: rightLineNum++,
-                                    rightText: line,
-                                    type: 'same',
-                                    isUnimportant: false,
-                                    isChangePair: false
-                                });
-                            });
-                            i++;
-                        }
+                    for (const sL of secL) {
+                        if (!sL.command) continue;
+                        const sR = mapR.get(normCmd(sL.command));
+                        if (sR) { usedR.add(sR); runSectionDiff(sL, sR, rules, currentFindings); }
+                        else runSectionDiff(sL, null, rules, currentFindings);
+                    }
+                    for (const sR of secR) {
+                        if (!usedR.has(sR) && sR.command) runSectionDiff(null, sR, rules, currentFindings);
+                    }
+                    // Preambles (lines before the first prompt)
+                    const n = Math.max(preL.length, preR.length);
+                    for (let i = 0; i < n; i++) {
+                        runSectionDiff(preL[i] || null, preR[i] || null, rules, currentFindings);
                     }
                 }
+
+                // Unified patch export
+                lastPatchText = buildPatchText(rawOriginal, rawModified);
 
                 // Render the diff view
                 renderAlignedDiff();
@@ -2660,7 +4210,7 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                 const t1 = performance.now();
                 diffDurationEl.textContent = `${Math.round(t1 - t0)}ms`;
 
-                // Update summary banner
+                // Update summary banner + sanity dashboard
                 updateSummaryStats();
 
                 // Show containers
@@ -2680,7 +4230,7 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
             // ----------------------------------------------------
             // Intra-line (Character & Word) Diff Renderer
             // ----------------------------------------------------
-            function renderIntraLineDiff(leftText, rightText, isUnimportant) {
+            function renderIntraLineDiff(leftText, rightText, isUnimportant, severity) {
                 let diffTokens = [];
                 try {
                     diffTokens = Diff.diffWordsWithSpace(leftText, rightText);
@@ -2693,14 +4243,15 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
 
                 let leftHTML = '';
                 let rightHTML = '';
+                const critical = severity === 'critical';
 
                 diffTokens.forEach(token => {
                     const escaped = escapeHTML(token.value);
                     if (token.removed) {
-                        const cls = isUnimportant ? 'inline-diff-unimportant' : 'inline-diff-removed';
+                        const cls = critical ? 'inline-diff-critical' : (isUnimportant ? 'inline-diff-unimportant' : 'inline-diff-removed');
                         leftHTML += `<span class="${cls}">${escaped}</span>`;
                     } else if (token.added) {
-                        const cls = isUnimportant ? 'inline-diff-unimportant' : 'inline-diff-added';
+                        const cls = critical ? 'inline-diff-critical' : (isUnimportant ? 'inline-diff-unimportant' : 'inline-diff-added');
                         rightHTML += `<span class="${cls}">${escaped}</span>`;
                     } else {
                         leftHTML += escaped;
@@ -2724,39 +4275,66 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
             // ----------------------------------------------------
             // Diff Rendering with Beyond Compare Display Filters
             // ----------------------------------------------------
+            function computeVisibleIndices() {
+                const total = alignedLinesData.length;
+                const visible = new Set();
+                const diffIndices = [];
+
+                for (let idx = 0; idx < total; idx++) {
+                    if (alignedLinesData[idx].type !== 'same') diffIndices.push(idx);
+                }
+
+                if (currentFilter === 'all') {
+                    for (let idx = 0; idx < total; idx++) visible.add(idx);
+                    return visible;
+                }
+
+                if (currentFilter === 'same') {
+                    for (let idx = 0; idx < total; idx++) {
+                        if (alignedLinesData[idx].type === 'same') visible.add(idx);
+                    }
+                } else if (currentFilter === 'critical') {
+                    for (let idx = 0; idx < total; idx++) {
+                        if (alignedLinesData[idx].severity === 'critical') visible.add(idx);
+                    }
+                } else if (currentFilter === 'diff') {
+                    diffIndices.forEach(idx => visible.add(idx));
+                } else if (currentFilter === 'context') {
+                    diffIndices.forEach(idx => {
+                        const start = Math.max(0, idx - contextLines);
+                        const end = Math.min(total - 1, idx + contextLines);
+                        for (let k = start; k <= end; k++) visible.add(k);
+                    });
+                }
+
+                // Context preservation: command section bands are always visible;
+                // parent config block headers stay visible when their block contains changes.
+                const liveAncestors = new Set();
+                visible.forEach(i => {
+                    (alignedLinesData[i].ancestors || []).forEach(p => liveAncestors.add(p));
+                });
+                for (let idx = 0; idx < total; idx++) {
+                    const row = alignedLinesData[idx];
+                    if (row.isSectionHeader) visible.add(idx);
+                    else if (row.isBlockHeader && (row.ancestors || []).some(p => liveAncestors.has(p))) visible.add(idx);
+                }
+
+                // Manually expanded folds remain visible
+                for (const key of expandedFolds) {
+                    const parts = key.split(':');
+                    const s = parseInt(parts[0], 10), e = parseInt(parts[1], 10);
+                    for (let i = s; i <= e && i < total; i++) visible.add(i);
+                }
+
+                return visible;
+            }
+
             function renderAlignedDiff() {
                 const total = alignedLinesData.length;
                 let leftHTML = '';
                 let rightHTML = '';
 
-                const visibleIndices = new Set();
-                const diffIndices = [];
-
-                for (let idx = 0; idx < total; idx++) {
-                    const row = alignedLinesData[idx];
-                    const isDiff = row.type !== 'same';
-                    if (isDiff) {
-                        diffIndices.push(idx);
-                    }
-                }
-
-                if (currentFilter === 'all') {
-                    for (let idx = 0; idx < total; idx++) visibleIndices.add(idx);
-                } else if (currentFilter === 'diff') {
-                    diffIndices.forEach(idx => visibleIndices.add(idx));
-                } else if (currentFilter === 'same') {
-                    for (let idx = 0; idx < total; idx++) {
-                        if (alignedLinesData[idx].type === 'same') visibleIndices.add(idx);
-                    }
-                } else if (currentFilter === 'context') {
-                    diffIndices.forEach(idx => {
-                        const start = Math.max(0, idx - contextLines);
-                        const end = Math.min(total - 1, idx + contextLines);
-                        for (let k = start; k <= end; k++) {
-                            visibleIndices.add(k);
-                        }
-                    });
-                }
+                const visibleIndices = computeVisibleIndices();
 
                 // Build HTML
                 let inFold = false;
@@ -2810,7 +4388,39 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                 });
             }
 
+            function commonRowMetaHTML(row) {
+                let rowClass = '';
+                if (row.severity === 'critical') rowClass += ' row-critical';
+                else if (row.severity === 'warning') rowClass += ' row-warning';
+                if (row.isBlockHeader) rowClass += ' row-block-header';
+
+                let prefix = '';
+                if (row.classification && row.classification !== 'UNCHANGED') {
+                    const map = { ADDED: 'badge-added', REMOVED: 'badge-removed', MODIFIED: 'badge-modified' };
+                    prefix += `<span class="row-badge ${map[row.classification] || ''}">${row.classification}</span>`;
+                }
+                if (row.severity === 'critical') prefix += '<span class="sev-mark" title="Critical">&#9888;</span>';
+                else if (row.severity === 'warning') prefix += '<span class="sev-mark sev-warn" title="Warning">&#9670;</span>';
+                return { rowClass, prefix };
+            }
+
+            function sectionBandRowHTML(row, idx, side) {
+                const text = side === 'left' ? row.leftText : row.rightText;
+                const num = side === 'left' ? row.leftNum : row.rightNum;
+                const bandCls = row.type === 'removed' ? ' band-removed' : (row.type === 'added' ? ' band-added' : '');
+                const chip = row.strategy
+                    ? `<span class="section-engine-chip chip-${row.strategy}">${row.strategy === 'config' ? 'CONFIG BLOCKS' : (row.strategy === 'table' ? 'KEY TABLE' : 'TEXT')}</span>`
+                    : '';
+                const content = text === null ? '&nbsp;' : chip + escapeHTML(text);
+                return `<div class="diff-row section-band${bandCls}" data-row-idx="${idx}" id="diffRow${side === 'left' ? 'Left' : 'Right'}-${idx}">
+                            <div class="line-gutter"><span>${num === null ? '' : num}</span><span class="line-sign">§</span></div>
+                            <div class="line-text">${content}</div>
+                        </div>`;
+            }
+
             function createLeftRowHTML(row, idx) {
+                if (row.isSectionHeader) return sectionBandRowHTML(row, idx, 'left');
+
                 if (row.leftText === null) {
                     return `<div class="diff-row row-empty" data-row-idx="${idx}">
                                 <div class="line-gutter"><span class="line-sign">&nbsp;</span></div>
@@ -2818,37 +4428,43 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                             </div>`;
                 }
 
-                let rowClass = '';
+                const meta = commonRowMetaHTML(row);
+                let rowClass = meta.rowClass;
                 let sign = '&nbsp;';
                 let contentHTML = escapeHTML(row.leftText);
 
                 if (row.type === 'removed') {
-                    rowClass = 'row-removed';
+                    rowClass += ' row-removed';
                     sign = '≠';
                 } else if (row.type === 'modified') {
                     if (row.isChangePair) {
-                        rowClass = row.isUnimportant ? 'row-unimportant' : 'row-modified-left';
+                        rowClass += row.isUnimportant ? ' row-unimportant' : ' row-modified-left';
                         sign = row.isUnimportant ? '•' : '≠';
-                        const intra = renderIntraLineDiff(row.leftText, row.rightText, row.isUnimportant);
-                        contentHTML = intra.leftHTML;
+                        contentHTML = renderIntraLineDiff(row.leftText, row.rightText, row.isUnimportant, row.severity).leftHTML;
                     } else {
-                        rowClass = 'row-removed';
+                        rowClass += ' row-removed';
                         sign = '≠';
                     }
                 } else if (row.type === 'added') {
-                    rowClass = 'row-empty';
+                    rowClass += ' row-empty';
                 }
 
-                return `<div class="diff-row ${rowClass}" data-row-idx="${idx}" id="diffRowLeft-${idx}">
+                const title = row.changedFields && row.changedFields.length
+                    ? ` title="Changed: ${escapeHTML(row.changedFields.map(c => c.field).join(', '))}"`
+                    : '';
+
+                return `<div class="diff-row${rowClass}" data-row-idx="${idx}" id="diffRowLeft-${idx}"${title}>
                             <div class="line-gutter">
                                 <span>${row.leftNum}</span>
                                 <span class="line-sign">${sign}</span>
                             </div>
-                            <div class="line-text">${contentHTML || '&nbsp;'}</div>
+                            <div class="line-text">${meta.prefix}${contentHTML || '&nbsp;'}</div>
                         </div>`;
             }
 
             function createRightRowHTML(row, idx) {
+                if (row.isSectionHeader) return sectionBandRowHTML(row, idx, 'right');
+
                 if (row.rightText === null) {
                     return `<div class="diff-row row-empty" data-row-idx="${idx}">
                                 <div class="line-gutter"><span class="line-sign">&nbsp;</span></div>
@@ -2856,33 +4472,37 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                             </div>`;
                 }
 
-                let rowClass = '';
+                const meta = commonRowMetaHTML(row);
+                let rowClass = meta.rowClass;
                 let sign = '&nbsp;';
                 let contentHTML = escapeHTML(row.rightText);
 
                 if (row.type === 'added') {
-                    rowClass = 'row-added';
+                    rowClass += ' row-added';
                     sign = '≠';
                 } else if (row.type === 'modified') {
                     if (row.isChangePair) {
-                        rowClass = row.isUnimportant ? 'row-unimportant' : 'row-modified-right';
+                        rowClass += row.isUnimportant ? ' row-unimportant' : ' row-modified-right';
                         sign = row.isUnimportant ? '•' : '≠';
-                        const intra = renderIntraLineDiff(row.leftText, row.rightText, row.isUnimportant);
-                        contentHTML = intra.rightHTML;
+                        contentHTML = renderIntraLineDiff(row.leftText, row.rightText, row.isUnimportant, row.severity).rightHTML;
                     } else {
-                        rowClass = 'row-added';
+                        rowClass += ' row-added';
                         sign = '≠';
                     }
                 } else if (row.type === 'removed') {
-                    rowClass = 'row-empty';
+                    rowClass += ' row-empty';
                 }
 
-                return `<div class="diff-row ${rowClass}" data-row-idx="${idx}" id="diffRowRight-${idx}">
+                const title = row.changedFields && row.changedFields.length
+                    ? ` title="Changed: ${escapeHTML(row.changedFields.map(c => c.field).join(', '))}"`
+                    : '';
+
+                return `<div class="diff-row${rowClass}" data-row-idx="${idx}" id="diffRowRight-${idx}"${title}>
                             <div class="line-gutter">
                                 <span>${row.rightNum}</span>
                                 <span class="line-sign">${sign}</span>
                             </div>
-                            <div class="line-text">${contentHTML || '&nbsp;'}</div>
+                            <div class="line-text">${meta.prefix}${contentHTML || '&nbsp;'}</div>
                         </div>`;
             }
 
@@ -2897,11 +4517,12 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
             }
 
             function expandFold(start, end) {
+                expandedFolds.add(start + ':' + end);
                 renderAlignedDiff();
             }
 
             // ----------------------------------------------------
-            // Statistics and Summary
+            // Statistics, Summary & Network Sanity Dashboard
             // ----------------------------------------------------
             function updateSummaryStats() {
                 let added = 0;
@@ -2909,13 +4530,16 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                 let modified = 0;
                 let same = 0;
                 let unimportant = 0;
+                let critical = 0;
 
                 alignedLinesData.forEach(r => {
+                    if (r.isSectionHeader) return;
+                    if (r.isUnimportant) unimportant++;
+                    if (r.severity === 'critical') critical++;
                     if (r.type === 'added') added++;
                     else if (r.type === 'removed') removed++;
                     else if (r.type === 'modified') {
-                        if (r.isUnimportant) unimportant++;
-                        else modified++;
+                        if (!r.isUnimportant) modified++;
                     } else same++;
                 });
 
@@ -2928,9 +4552,6 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                     statDiffTotal.style.display = totalDiffLines > 0 ? 'inline-flex' : 'none';
                 }
 
-                if (addedCountEl) addedCountEl.textContent = added;
-                if (removedCountEl) removedCountEl.textContent = removed;
-                if (modifiedCountEl) modifiedCountEl.textContent = modified;
                 if (sameCountEl) sameCountEl.textContent = same;
 
                 if (unimportant > 0) {
@@ -2940,6 +4561,15 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                     statUnimportant.style.display = 'none';
                 }
 
+                if (critical > 0 && statCritical && criticalCountEl) {
+                    statCritical.style.display = 'inline-flex';
+                    criticalCountEl.textContent = critical;
+                } else if (statCritical) {
+                    statCritical.style.display = 'none';
+                }
+
+                renderSanityDashboard();
+
                 if (totalDiffLines === 0 && unimportant === 0) {
                     statusDot.className = 'status-dot match';
                     statusMessage.textContent = 'Files are identical (100% match)';
@@ -2948,10 +4578,109 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                     statusDot.className = 'status-dot unimportant';
                     statusMessage.textContent = `Match (${unimportant} unimportant differences ignored)`;
                     showToast(`Files match with ${unimportant} unimportant differences`, "info");
+                } else if (critical > 0) {
+                    statusDot.className = 'status-dot diff';
+                    statusMessage.textContent = `Differences found — ${critical} CRITICAL alert${critical > 1 ? 's' : ''} (${totalDiffLines} mismatch lines)`;
+                    showToast(`${critical} CRITICAL alert${critical > 1 ? 's' : ''}: check the Sanity Dashboard`, "warning");
                 } else {
                     statusDot.className = 'status-dot diff';
                     statusMessage.textContent = `Differences found (${totalDiffLines} mismatch lines)`;
                     showToast(`Found ${totalDiffLines} difference line${totalDiffLines > 1 ? 's' : ''}`, "warning");
+                }
+            }
+
+            function sanityItemHTML(item) {
+                return `<li class="sanity-item ${item.severity || 'info'}" data-row-idx="${item.row.idx}" title="Click to jump to this line">${escapeHTML(item.title)}</li>`;
+            }
+
+            function routesCardHTML(f) {
+                const items = [...f.routes.missing, ...f.routes.nextHopShifts, ...f.routes.added];
+                const delta = f.routes.after - f.routes.before;
+                const deltaTxt = `${f.routes.before} → ${f.routes.after} routes${delta !== 0 ? ` (${delta > 0 ? '+' : ''}${delta})` : ''}`;
+                const cls = f.routes.missing.length ? 'critical' : (f.routes.nextHopShifts.length || delta !== 0) ? 'warning' : 'ok';
+                return `<div class="sanity-card-header ${cls}"><span>Routing Delta</span><span class="sanity-count">${deltaTxt}</span></div>
+                    <ul class="sanity-list">${items.length ? items.map(sanityItemHTML).join('') : '<li class="sanity-item empty">No route changes detected</li>'}</ul>`;
+            }
+
+            function adjacencyCardHTML(f) {
+                const items = [...f.adjacency].sort((a, b) => (b.severity === 'critical' ? 1 : 0) - (a.severity === 'critical' ? 1 : 0));
+                const cls = f.adjacency.some(a => a.severity === 'critical') ? 'critical' : f.adjacency.length ? 'warning' : 'ok';
+                const countTxt = f.adjacency.length ? `${f.adjacency.length} transition${f.adjacency.length > 1 ? 's' : ''}` : 'stable';
+                return `<div class="sanity-card-header ${cls}"><span>Neighbor / Adjacency Health</span><span class="sanity-count">${countTxt}</span></div>
+                    <ul class="sanity-list">${items.length ? items.map(sanityItemHTML).join('') : '<li class="sanity-item empty">No BGP/OSPF state changes</li>'}</ul>`;
+            }
+
+            function l2CardHTML(f) {
+                const items = [...f.l2.arpFlips, ...f.l2.macMoves, ...f.intfChanges];
+                const cls = items.length ? 'warning' : 'ok';
+                const countTxt = `ARP entries ${f.l2.arpBefore} → ${f.l2.arpAfter}`;
+                return `<div class="sanity-card-header ${cls}"><span>L2 / ARP Shifts</span><span class="sanity-count">${countTxt}</span></div>
+                    <ul class="sanity-list">${items.length ? items.map(sanityItemHTML).join('') : '<li class="sanity-item empty">No ARP/MAC/interface shifts</li>'}</ul>`;
+            }
+
+            function renderSanityDashboard() {
+                if (!sanityDashboard) return;
+                const f = currentFindings || emptyFindings();
+                const routeDelta = f.routes.before !== f.routes.after;
+                const hasAny = routeDelta || f.routes.missing.length || f.routes.added.length ||
+                    f.routes.nextHopShifts.length || f.adjacency.length ||
+                    f.l2.arpFlips.length || f.l2.macMoves.length || f.intfChanges.length;
+
+                if (!hasAny) {
+                    sanityDashboard.style.display = 'none';
+                    return;
+                }
+                sanityDashboard.style.display = 'flex';
+
+                // Critical alerts strip
+                const strip = document.getElementById('sanityCriticalStrip');
+                const criticals = [
+                    ...f.routes.missing.map(m => ({ txt: m.title, idx: m.row.idx })),
+                    ...f.adjacency.filter(a => a.severity === 'critical').map(a => ({ txt: `${a.proto} peer down: ` + a.title, idx: a.row.idx }))
+                ];
+                if (criticals.length && strip) {
+                    strip.style.display = 'flex';
+                    strip.innerHTML = `<span class="strip-title">&#9888; Critical Alerts (${criticals.length})</span>` +
+                        criticals.map(c => `<button class="strip-item" data-row-idx="${c.idx}">${escapeHTML(c.txt)}</button>`).join('');
+                } else if (strip) {
+                    strip.style.display = 'none';
+                }
+
+                const cardRoutes = document.getElementById('sanityCardRoutes');
+                const cardAdj = document.getElementById('sanityCardAdjacency');
+                const cardL2 = document.getElementById('sanityCardL2');
+                if (cardRoutes) cardRoutes.innerHTML = routesCardHTML(f);
+                if (cardAdj) cardAdj.innerHTML = adjacencyCardHTML(f);
+                if (cardL2) cardL2.innerHTML = l2CardHTML(f);
+            }
+
+            function focusRow(idx) {
+                const row = alignedLinesData[idx];
+                if (!row) return;
+                let el = document.getElementById(`diffRowLeft-${idx}`) || document.getElementById(`diffRowRight-${idx}`);
+                if (!el && row.type !== 'same') {
+                    // Row hidden by the current filter → reveal everything first
+                    setDisplayFilter('all');
+                    el = document.getElementById(`diffRowLeft-${idx}`) || document.getElementById(`diffRowRight-${idx}`);
+                }
+                if (!el) return;
+                document.querySelectorAll('.diff-active').forEach(x => x.classList.remove('diff-active'));
+                el.classList.add('diff-active');
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => el.classList.remove('diff-active'), 2400);
+            }
+
+            function setDisplayFilter(filter) {
+                currentFilter = filter;
+                displayFilterGroup.querySelectorAll('.segmented-btn').forEach(b => {
+                    b.classList.toggle('active', b.dataset.filter === filter);
+                });
+                contextLinesSelect.style.display = filter === 'context' ? 'inline-block' : 'none';
+                if (alignedLinesData.length > 0) {
+                    renderAlignedDiff();
+                    buildDiffBlocks();
+                    updateDiffCounter();
+                    renderMinimap();
                 }
             }
 
@@ -3094,12 +4823,16 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                 for (let i = 0; i < total; i++) {
                     const row = alignedLinesData[i];
                     const y = (i / total) * height;
+                    if (row.isSectionHeader) continue;
 
-                    if (row.type === 'added' || row.type === 'removed') {
-                        ctx.fillStyle = '#ef4444';
-                        ctx.fillRect(0, y, width, lineH);
-                    } else if (row.type === 'modified') {
-                        ctx.fillStyle = row.isUnimportant ? '#3b82f6' : '#ef4444';
+                    let color = null;
+                    if (row.severity === 'critical') color = '#dc2626';
+                    else if (row.severity === 'warning') color = '#f59e0b';
+                    else if (row.type === 'added' || row.type === 'removed') color = '#ef4444';
+                    else if (row.type === 'modified') color = row.isUnimportant ? '#64748b' : '#ef4444';
+
+                    if (color) {
+                        ctx.fillStyle = color;
                         ctx.fillRect(0, y, width, lineH);
                     }
                 }
@@ -3146,29 +4879,22 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
             });
 
             // ----------------------------------------------------
-            // Display Filter Buttons (Show All / Diffs / Same / Context)
+            // Display Filter Buttons (Show All / Diffs / Critical / Same / Context)
             // ----------------------------------------------------
             displayFilterGroup.querySelectorAll('.segmented-btn').forEach(btn => {
                 btn.addEventListener('click', function () {
-                    displayFilterGroup.querySelectorAll('.segmented-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-
-                    currentFilter = this.dataset.filter;
-
-                    if (currentFilter === 'context') {
-                        contextLinesSelect.style.display = 'inline-block';
-                    } else {
-                        contextLinesSelect.style.display = 'none';
-                    }
-
-                    if (alignedLinesData.length > 0) {
-                        renderAlignedDiff();
-                        buildDiffBlocks();
-                        updateDiffCounter();
-                        renderMinimap();
-                    }
+                    setDisplayFilter(this.dataset.filter);
                 });
             });
+
+            // Sanity Dashboard click-to-jump
+            if (sanityDashboard) {
+                sanityDashboard.addEventListener('click', (e) => {
+                    const btn = e.target.closest('[data-row-idx]');
+                    if (!btn) return;
+                    focusRow(parseInt(btn.dataset.rowIdx, 10));
+                });
+            }
 
             contextLinesSelect.addEventListener('change', function () {
                 contextLines = parseInt(this.value);
@@ -3197,6 +4923,22 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                     renderMinimap();
                 });
             });
+
+            // ----------------------------------------------------
+            // Word Wrap Toggle (diff panes)
+            // ----------------------------------------------------
+            if (wrapToggleBtn) {
+                const wrapToggleText = document.getElementById('wrapToggleText');
+                wrapToggleBtn.addEventListener('click', () => {
+                    wrapMode = !wrapMode;
+                    wrapToggleBtn.classList.toggle('active', wrapMode);
+                    wrapToggleBtn.setAttribute('aria-pressed', String(wrapMode));
+                    if (wrapToggleText) wrapToggleText.textContent = wrapMode ? 'Wrap: On' : 'Wrap: Off';
+                    panesContainer.classList.toggle('wrap-mode', wrapMode);
+                    updateMinimapSlider();
+                    showToast(wrapMode ? 'Word wrap enabled for diff panes' : 'Word wrap disabled', 'info');
+                });
+            }
 
             // ----------------------------------------------------
             // Swap Sides & Synchronization Commands
@@ -3275,11 +5017,14 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
 
                 diffViewerWrapper.style.display = 'none';
                 summaryBar.style.display = 'none';
+                if (sanityDashboard) sanityDashboard.style.display = 'none';
                 diffNavDock.classList.remove('visible');
                 diffLeft.innerHTML = '';
                 diffRight.innerHTML = '';
                 alignedLinesData = [];
                 diffBlocks = [];
+                currentFindings = null;
+                expandedFolds.clear();
                 showToast("Cleared all inputs and results", "info");
             });
 
@@ -3309,6 +5054,10 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                 ruleIgnoreComments.checked = true;
                 ruleIgnoreTimestamps.checked = true;
                 ruleIgnoreUnimportant.checked = true;
+                ['ruleIgnoreArpAge', 'ruleIgnoreUptimeTimers', 'ruleIgnoreCounters', 'ruleIgnoreCryptoHashes', 'ruleIgnoreNtpClock'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.checked = true;
+                });
                 showToast("Reset rules to default", "info");
             });
 
@@ -3495,6 +5244,18 @@ Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
                     toast.classList.remove('show');
                 }, 3200);
             }
+
+            // Debug/testing hook (exposes engine internals to the console)
+            window.__COMPARE_DEBUG__ = {
+                splitIntoSections,
+                detectStrategy,
+                detectProfileId,
+                maskNoise,
+                TABLE_PROFILES,
+                get alignedLines() { return alignedLinesData; },
+                get findings() { return currentFindings; },
+                focusRow
+            };
         });
     </script>
 </body>

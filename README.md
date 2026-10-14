@@ -56,6 +56,29 @@ A professional, modern, and responsive suite of networking utilities designed fo
     *   Supports GW IP filtering: All, Private IP (RFC1918 + CGNAT), or Public IP.
     *   Run Mode selector: Trace (default) or Ping.
 
+## 🗂️ Versioning
+
+Every tool carries its own SemVer (`MAJOR.MINOR.PATCH`) badge in its header, and the hub shows a version chip on each tool card. The single source of truth is [`assets/js/version.js`](assets/js/version.js) — bump the tool entry there whenever you change that tool, and bump `suite` when shared assets change.
+
+**Current versions (2026-10-15, Suite v1.2.0):**
+
+| File | Version | Notes |
+|---|---|---|
+| `compare.html` | v3.0.0 | Multi-strategy diff engine: section splitting, hierarchical config blocks, key-based tables (ARP/MAC/route/BGP/OSPF/interface), noise masking, sanity dashboard, word wrap |
+| `subnet_calculator.html` | v1.2.0 | IPv6 usable-host range & boundary checks; self-hosted fonts |
+| `index.html` | v1.2.0 | Per-tool version chips on the hub; self-hosted fonts |
+| `mac_vender.html` | v1.1.0 | Clearer offline/file:// guidance (start-server.bat); self-hosted fonts |
+| `bng_gw_pingtrace.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
+| `mac_converter.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
+| `ping_result.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
+| `portqueue.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
+| `script.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
+| `subnet_converter.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
+| `text_filter.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
+| `wan.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
+
+Shared assets: `common.css` v1.2.0 • `fonts.css` v1.0.0 • `theme.js` v1.0.0 • `ip-utils.js` v1.1.0 • vendored `diff.min.js` v5.2.0
+
 ## 📦 Project Structure
 
 ```text

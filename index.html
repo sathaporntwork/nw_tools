@@ -8,9 +8,7 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22><rect x=%223%22 y=%223%22 width=%2218%22 height=%2218%22 rx=%222%22/><line x1=%229%22 y1=%223%22 x2=%229%22 y2=%2221%22/><line x1=%2215%22 y1=%223%22 x2=%2215%22 y2=%2221%22/></svg>">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/fonts.css">
     <link rel="stylesheet" href="assets/styles/common.css">
 
     <style>
@@ -153,6 +151,14 @@
             line-height: 1.6;
         }
 
+        .suite-version {
+            margin-top: 1.25rem;
+        }
+
+        .tool-content .version-badge {
+            margin-top: 0.9rem;
+        }
+
         .tool-badge {
             position: absolute;
             top: 1.5rem;
@@ -228,6 +234,7 @@
             </button>
             <h1>Network Tools Suite</h1>
             <p class="subtitle">Professional networking utilities for modern infrastructure</p>
+            <div class="suite-version"><span class="version-badge" data-suite-version></span></div>
         </div>
 
         <div class="tools-grid">
@@ -243,6 +250,7 @@
                 <div class="tool-content">
                     <h3>Config Compare</h3>
                     <p>Compare two text configurations side-by-side with difference highlighting</p>
+                <span class="version-badge" data-tool-version="compare.html"></span>
                 </div>
                 <span class="tool-badge">Analysis</span>
             </a>
@@ -258,6 +266,7 @@
                 <div class="tool-content">
                     <h3>MAC Address Converter</h3>
                     <p>Convert MAC addresses between different format notations</p>
+                <span class="version-badge" data-tool-version="mac_converter.html"></span>
                 </div>
                 <span class="tool-badge">Conversion</span>
             </a>
@@ -274,6 +283,7 @@
                 <div class="tool-content">
                     <h3>MAC Vendor Lookup</h3>
                     <p>Identify device manufacturers from MAC addresses using OUI database</p>
+                <span class="version-badge" data-tool-version="mac_vender.html"></span>
                 </div>
                 <span class="tool-badge">Lookup</span>
             </a>
@@ -289,6 +299,7 @@
                 <div class="tool-content">
                     <h3>Port Queue Check</h3>
                     <p>Monitor and analyze network port queue status and performance</p>
+                <span class="version-badge" data-tool-version="portqueue.html"></span>
                 </div>
                 <span class="tool-badge">Monitoring</span>
             </a>
@@ -304,6 +315,7 @@
                 <div class="tool-content">
                     <h3>Script Generator</h3>
                     <p>Generate configuration scripts for network devices and automation tasks</p>
+                <span class="version-badge" data-tool-version="script.html"></span>
                 </div>
                 <span class="tool-badge">Automation</span>
             </a>
@@ -322,6 +334,7 @@
                 <div class="tool-content">
                     <h3>Subnet Calculator</h3>
                     <p>Calculate IPv4 and IPv6 subnet information with CIDR notation</p>
+                <span class="version-badge" data-tool-version="subnet_calculator.html"></span>
                 </div>
                 <span class="tool-badge">IPv4/IPv6</span>
             </a>
@@ -339,6 +352,7 @@
                 <div class="tool-content">
                     <h3>Subnet Converter</h3>
                     <p>Convert between subnet mask, CIDR, and wildcard mask formats</p>
+                <span class="version-badge" data-tool-version="subnet_converter.html"></span>
                 </div>
                 <span class="tool-badge">Conversion</span>
             </a>
@@ -353,6 +367,7 @@
                 <div class="tool-content">
                     <h3>Text Filter</h3>
                     <p>Filter and process text data with advanced pattern matching</p>
+                <span class="version-badge" data-tool-version="text_filter.html"></span>
                 </div>
                 <span class="tool-badge">Processing</span>
             </a>
@@ -370,6 +385,7 @@
                 <div class="tool-content">
                     <h3>WAN Finder</h3>
                     <p>Discover and analyze WAN IP addresses from network data</p>
+                <span class="version-badge" data-tool-version="wan.html"></span>
                 </div>
                 <span class="tool-badge">Discovery</span>
             </a>
@@ -383,6 +399,7 @@
                 <div class="tool-content">
                     <h3>Ping Parser</h3>
                     <p>Parse Windows/Linux ping results to IP and Loss %</p>
+                <span class="version-badge" data-tool-version="ping_result.html"></span>
                 </div>
                 <span class="tool-badge">Analysis</span>
             </a>
@@ -399,6 +416,7 @@
                 <div class="tool-content">
                     <h3>BNG GW Ping/Traceroute</h3>
                     <p>Generate ping or traceroute commands for BNG gateway IPs with pool parity and IP-type filtering</p>
+                <span class="version-badge" data-tool-version="bng_gw_pingtrace.html"></span>
                 </div>
                 <span class="tool-badge">BNG</span>
             </a>
@@ -412,6 +430,7 @@
     <script>
     </script>
 
+    <script src="assets/js/version.js"></script>
     <script src="assets/js/theme.js"></script>
 </body>
 
