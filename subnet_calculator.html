@@ -302,11 +302,38 @@
                     const networkAddr = this.getIPv6Network(expanded, prefixLen);
                     const networkCompressed = IPUtils.compressIPv6(networkAddr);
 
+                    const networkBigInt = this.ipv6ToBigInt(networkAddr);
+                    let usableHostRange = 'N/A';
+                    let firstUsableExpanded = 'N/A';
+                    let lastUsableExpanded = 'N/A';
+
+                    if (prefixLen === 128) {
+                        usableHostRange = 'N/A';
+                    } else if (prefixLen === 127) {
+                        const firstUsable = IPUtils.compressIPv6(this.bigIntToIPv6(networkBigInt));
+                        const lastUsable = IPUtils.compressIPv6(this.bigIntToIPv6(networkBigInt + 1n));
+                        usableHostRange = `${firstUsable} - ${lastUsable}`;
+                        firstUsableExpanded = this.bigIntToIPv6(networkBigInt);
+                        lastUsableExpanded = this.bigIntToIPv6(networkBigInt + 1n);
+                    } else {
+                        const totalHostsBigInt = BigInt(2) ** BigInt(128 - prefixLen);
+                        const firstUsableBigInt = networkBigInt + 1n;
+                        const lastUsableBigInt = networkBigInt + totalHostsBigInt - 1n;
+                        const firstUsable = IPUtils.compressIPv6(this.bigIntToIPv6(firstUsableBigInt));
+                        const lastUsable = IPUtils.compressIPv6(this.bigIntToIPv6(lastUsableBigInt));
+                        usableHostRange = `${firstUsable} - ${lastUsable}`;
+                        firstUsableExpanded = this.bigIntToIPv6(firstUsableBigInt);
+                        lastUsableExpanded = this.bigIntToIPv6(lastUsableBigInt);
+                    }
+
                     const results = {
                         'Expanded Address': expanded,
                         'Compressed Address': compressed,
                         'Network Address': networkCompressed,
                         'Prefix Length': `/${prefixLen}`,
+                        'Usable Host Range': usableHostRange,
+                        'First Usable Host': firstUsableExpanded,
+                        'Last Usable Host': lastUsableExpanded,
                         'Total Hosts': prefixLen === 128 ? '1' : `2^${128 - prefixLen}`,
                     };
 
@@ -337,6 +364,7 @@
                     const currentBigInt = this.ipv6ToBigInt(this.currentIP);
                     const increment = BigInt(2) ** BigInt(128 - this.currentCIDR);
                     const newNetwork = currentBigInt + (BigInt(direction) * increment);
+                    if (newNetwork < BigInt(0) || newNetwork > (BigInt(2) ** BigInt(128) - BigInt(1))) return;
                     const newIPStr = this.bigIntToIPv6(newNetwork);
                     const compressed = IPUtils.compressIPv6(newIPStr);
                     const newInput = `${compressed}/${this.currentCIDR}`;
