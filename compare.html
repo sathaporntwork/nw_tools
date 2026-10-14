@@ -105,23 +105,17 @@
         }
 
         :root {
-            --bc-added-bg: rgba(16, 185, 129, 0.14);
-            --bc-added-border: rgba(16, 185, 129, 0.35);
-            --bc-added-inline: rgba(16, 185, 129, 0.38);
-            --bc-added-text: #a7f3d0;
+            /* Beyond Compare difference theme (Red for differences, no green) */
+            --bc-diff-bg: rgba(239, 68, 68, 0.12);
+            --bc-diff-border: rgba(239, 68, 68, 0.38);
+            --bc-diff-inline: rgba(239, 68, 68, 0.28);
+            --bc-diff-text: #fca5a5;
+            --bc-diff-gutter: #ef4444;
 
-            --bc-removed-bg: rgba(239, 68, 68, 0.14);
-            --bc-removed-border: rgba(239, 68, 68, 0.35);
-            --bc-removed-inline: rgba(239, 68, 68, 0.38);
-            --bc-removed-text: #fecaca;
-
-            --bc-modified-left-bg: rgba(239, 68, 68, 0.10);
-            --bc-modified-right-bg: rgba(16, 185, 129, 0.10);
-
-            --bc-unimportant-bg: rgba(59, 130, 246, 0.14);
+            --bc-unimportant-bg: rgba(59, 130, 246, 0.12);
             --bc-unimportant-border: rgba(59, 130, 246, 0.35);
-            --bc-unimportant-inline: rgba(59, 130, 246, 0.35);
-            --bc-unimportant-text: #bfdbfe;
+            --bc-unimportant-inline: rgba(59, 130, 246, 0.28);
+            --bc-unimportant-text: #93c5fd;
 
             --bc-line-num-bg: rgba(0, 0, 0, 0.25);
             --bc-line-num-color: #71717a;
@@ -130,23 +124,16 @@
         }
 
         [data-theme="light"] {
-            --bc-added-bg: rgba(16, 185, 129, 0.15);
-            --bc-added-border: rgba(16, 185, 129, 0.4);
-            --bc-added-inline: rgba(16, 185, 129, 0.3);
-            --bc-added-text: #064e3b;
+            --bc-diff-bg: rgba(239, 68, 68, 0.08);
+            --bc-diff-border: rgba(239, 68, 68, 0.32);
+            --bc-diff-inline: rgba(239, 68, 68, 0.20);
+            --bc-diff-text: #b91c1c;
+            --bc-diff-gutter: #dc2626;
 
-            --bc-removed-bg: rgba(239, 68, 68, 0.15);
-            --bc-removed-border: rgba(239, 68, 68, 0.4);
-            --bc-removed-inline: rgba(239, 68, 68, 0.28);
-            --bc-removed-text: #7f1d1d;
-
-            --bc-modified-left-bg: rgba(239, 68, 68, 0.10);
-            --bc-modified-right-bg: rgba(16, 185, 129, 0.10);
-
-            --bc-unimportant-bg: rgba(59, 130, 246, 0.12);
-            --bc-unimportant-border: rgba(59, 130, 246, 0.35);
-            --bc-unimportant-inline: rgba(59, 130, 246, 0.25);
-            --bc-unimportant-text: #1e3a8a;
+            --bc-unimportant-bg: rgba(59, 130, 246, 0.10);
+            --bc-unimportant-border: rgba(59, 130, 246, 0.30);
+            --bc-unimportant-inline: rgba(59, 130, 246, 0.20);
+            --bc-unimportant-text: #1d4ed8;
 
             --bc-line-num-bg: rgba(0, 0, 0, 0.05);
             --bc-line-num-color: #64748b;
@@ -680,19 +667,13 @@
             border: 1px solid var(--border-color);
         }
 
-        .stat-pill.added {
-            color: #10b981;
-            border-color: rgba(16, 185, 129, 0.3);
-        }
-
-        .stat-pill.removed {
-            color: #ef4444;
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-
+        .stat-pill.diff-total,
+        .stat-pill.added,
+        .stat-pill.removed,
         .stat-pill.modified {
-            color: #f59e0b;
-            border-color: rgba(245, 158, 11, 0.3);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.35);
+            background: rgba(239, 68, 68, 0.08);
         }
 
         .stat-pill.same {
@@ -701,7 +682,8 @@
 
         .stat-pill.unimportant {
             color: #3b82f6;
-            border-color: rgba(59, 130, 246, 0.3);
+            border-color: rgba(59, 130, 246, 0.35);
+            background: rgba(59, 130, 246, 0.08);
         }
 
         /* ========================================================
@@ -831,41 +813,23 @@
             word-break: normal;
         }
 
-        /* Line Color States */
-        .diff-row.row-added {
-            background-color: var(--bc-added-bg);
-            color: var(--bc-added-text);
-        }
-
-        .diff-row.row-added .line-sign {
-            color: #10b981;
-        }
-
-        .diff-row.row-removed {
-            background-color: var(--bc-removed-bg);
-            color: var(--bc-removed-text);
-        }
-
-        .diff-row.row-removed .line-sign {
-            color: #ef4444;
-        }
-
-        .diff-row.row-modified-left {
-            background-color: var(--bc-modified-left-bg);
-            color: var(--bc-removed-text);
-        }
-
-        .diff-row.row-modified-left .line-sign {
-            color: #f59e0b;
-        }
-
+        /* Line Color States - Beyond Compare (Red for all differences, NO green, NO strikethrough) */
+        .diff-row.row-added,
+        .diff-row.row-removed,
+        .diff-row.row-modified,
+        .diff-row.row-modified-left,
         .diff-row.row-modified-right {
-            background-color: var(--bc-modified-right-bg);
-            color: var(--bc-added-text);
+            background-color: var(--bc-diff-bg);
+            color: var(--bc-diff-text);
         }
 
+        .diff-row.row-added .line-sign,
+        .diff-row.row-removed .line-sign,
+        .diff-row.row-modified .line-sign,
+        .diff-row.row-modified-left .line-sign,
         .diff-row.row-modified-right .line-sign {
-            color: #10b981;
+            color: var(--bc-diff-gutter);
+            font-weight: 700;
         }
 
         .diff-row.row-unimportant {
@@ -893,30 +857,31 @@
                     rgba(0, 0, 0, 0.04) 12px);
         }
 
-        /* Intra-line character / word highlighting */
-        .inline-diff-added {
-            background-color: var(--bc-added-inline);
+        /* Intra-line character / word highlighting (Bold Red, NO strikethrough) */
+        .inline-diff-added,
+        .inline-diff-removed,
+        .inline-diff-modified {
+            background-color: var(--bc-diff-inline);
             border-radius: 3px;
-            box-shadow: 0 0 0 1px var(--bc-added-border);
-            font-weight: 600;
-            padding: 1px 2px;
+            box-shadow: 0 0 0 1px var(--bc-diff-border);
+            font-weight: 700;
+            padding: 1px 3px;
+            color: #ffffff;
+            text-decoration: none !important;
         }
 
-        .inline-diff-removed {
-            background-color: var(--bc-removed-inline);
-            border-radius: 3px;
-            box-shadow: 0 0 0 1px var(--bc-removed-border);
-            font-weight: 600;
-            padding: 1px 2px;
-            text-decoration: line-through;
-            text-decoration-thickness: 1.5px;
+        [data-theme="light"] .inline-diff-added,
+        [data-theme="light"] .inline-diff-removed,
+        [data-theme="light"] .inline-diff-modified {
+            color: #991b1b;
         }
 
         .inline-diff-unimportant {
             background-color: var(--bc-unimportant-inline);
             border-radius: 3px;
             box-shadow: 0 0 0 1px var(--bc-unimportant-border);
-            padding: 1px 2px;
+            padding: 1px 3px;
+            text-decoration: none !important;
         }
 
         /* Collapsed / Omitted Separator */
@@ -1404,6 +1369,15 @@
                     <span>Compare Configs</span>
                 </button>
 
+                <div class="segmented-group" id="alignModeGroup" title="Comparison Alignment Strategy">
+                    <button class="segmented-btn active" data-align="seq" id="alignSeqBtn" title="Sequential line order comparison (Standard)">
+                        <span>Config Mode</span>
+                    </button>
+                    <button class="segmented-btn" data-align="table" id="alignTableBtn" title="Order-tolerant key alignment (Best for ARP / MAC / Routing tables)">
+                        <span>ARP / Table Mode</span>
+                    </button>
+                </div>
+
                 <button id="swapSidesBtn" class="btn-secondary" title="Swap Left and Right sides (Alt+S)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1433,6 +1407,17 @@
                         <line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
                     <span>Sample Cisco</span>
+                </button>
+
+                <button id="loadSampleArpBtn" class="btn-secondary" title="Load sample ARP table with shuffled rows & changed MAC">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="18" x="3" y="3" rx="2" />
+                        <path d="M3 9h18" />
+                        <path d="M3 15h18" />
+                        <path d="M9 3v18" />
+                    </svg>
+                    <span>Sample ARP</span>
                 </button>
 
                 <button id="clearAllBtn" class="btn-secondary" title="Clear all text and reset" style="background-image: linear-gradient(135deg, #f87171, #b91c1c) !important; color: white !important; border: none !important;">
@@ -1559,17 +1544,11 @@
                 </div>
 
                 <div class="summary-stats-pills">
-                    <div class="stat-pill added" id="statAdded" title="Added Lines">
-                        <span>+</span><span id="addedCount">0</span>
-                    </div>
-                    <div class="stat-pill removed" id="statRemoved" title="Removed Lines">
-                        <span>-</span><span id="removedCount">0</span>
-                    </div>
-                    <div class="stat-pill modified" id="statModified" title="Modified Lines">
-                        <span>~</span><span id="modifiedCount">0</span>
+                    <div class="stat-pill diff-total" id="statDiffTotal" title="Different Lines (Mismatches)">
+                        <span>≠</span><span id="diffTotalCount">0</span> diffs
                     </div>
                     <div class="stat-pill same" id="statSame" title="Identical Lines">
-                        <span>=</span><span id="sameCount">0</span>
+                        <span>=</span><span id="sameCount">0</span> same
                     </div>
                     <div class="stat-pill unimportant" id="statUnimportant" style="display: none;"
                         title="Unimportant Differences (Ignored)">
@@ -1806,6 +1785,41 @@
                                 <div><strong>Ignore volatile timestamps & headers</strong></div>
                                 <div class="rule-item-desc">Ignore "Last configuration change at...", "Building
                                     configuration...", "NVRAM config..."</div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreArpAge" checked>
+                            <div>
+                                <div><strong>Ignore ARP/MAC dynamic Age & timers</strong></div>
+                                <div class="rule-item-desc">Disregard changing minute/second age timers in show ip arp or MAC address tables</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Alignment & Order Strategy -->
+                    <div class="rule-group">
+                        <div class="rule-group-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="16 3 21 3 21 8"/>
+                                <line x1="4" y1="20" x2="21" y2="3"/>
+                                <polyline points="21 16 21 21 16 21"/>
+                                <line x1="15" y1="15" x2="21" y2="21"/>
+                                <line x1="4" y1="4" x2="9" y2="9"/>
+                            </svg>
+                            Alignment & Order Strategy
+                        </div>
+                        <label class="rule-item">
+                            <input type="radio" name="alignStrategyRadio" id="radioAlignSeq" value="seq" checked>
+                            <div>
+                                <div><strong>Sequential / Hierarchy Mode</strong></div>
+                                <div class="rule-item-desc">Standard line order comparison; best for router & switch configurations</div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="radio" name="alignStrategyRadio" id="radioAlignTable" value="table">
+                            <div>
+                                <div><strong>ARP / Table Mode (Order-Tolerant Key Matching)</strong></div>
+                                <div class="rule-item-desc">Matches entries by IP/MAC even if lines are shuffled or sorted differently</div>
                             </div>
                         </label>
                     </div>
@@ -2052,8 +2066,71 @@ line vty 0 4
 !
 end`;
 
-            // Load Sample
+            // ----------------------------------------------------
+            // Sample Datasets: Cisco Configs & ARP Tables
+            // ----------------------------------------------------
+            const sampleArpOriginal = `Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+Internet  10.1.1.1                1   0000.0c07.ac01  ARPA   Vlan10
+Internet  10.1.1.2                5   0000.0c07.ac02  ARPA   Vlan10
+Internet  10.1.1.3               12   0000.0c07.ac03  ARPA   Vlan10
+Internet  10.1.1.4                0   0000.0c07.ac04  ARPA   Vlan10
+Internet  10.1.1.5                -   0000.0c07.ac05  ARPA   Vlan10
+Internet  10.1.1.10              25   0000.0c07.ac10  ARPA   Vlan10
+Internet  10.1.1.20               2   0000.0c07.ac20  ARPA   Vlan10`;
+
+            const sampleArpModified = `Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+Internet  10.1.1.4                3   0000.0c07.ac04  ARPA   Vlan10
+Internet  10.1.1.1                2   0000.0c07.ac01  ARPA   Vlan10
+Internet  10.1.1.20               4   0000.0c07.ac20  ARPA   Vlan10
+Internet  10.1.1.5                -   0000.0c07.ac99  ARPA   Vlan10
+Internet  10.1.1.2                7   0000.0c07.ac02  ARPA   Vlan10
+Internet  10.1.1.10              28   0000.0c07.ac10  ARPA   Vlan10
+Internet  10.1.1.99               0   0000.0c07.ac99  ARPA   Vlan10`;
+
+            let currentAlignMode = 'seq'; // 'seq' | 'table'
+
+            const alignSeqBtn = document.getElementById('alignSeqBtn');
+            const alignTableBtn = document.getElementById('alignTableBtn');
+            const radioAlignSeq = document.getElementById('radioAlignSeq');
+            const radioAlignTable = document.getElementById('radioAlignTable');
+            const loadSampleArpBtn = document.getElementById('loadSampleArpBtn');
+
+            function setAlignMode(mode) {
+                currentAlignMode = mode;
+                if (alignSeqBtn && alignTableBtn) {
+                    alignSeqBtn.classList.toggle('active', mode === 'seq');
+                    alignTableBtn.classList.toggle('active', mode === 'table');
+                }
+                if (radioAlignSeq && radioAlignTable) {
+                    radioAlignSeq.checked = (mode === 'seq');
+                    radioAlignTable.checked = (mode === 'table');
+                }
+            }
+
+            if (alignSeqBtn) {
+                alignSeqBtn.addEventListener('click', () => {
+                    setAlignMode('seq');
+                    if (originalInput.value || modifiedInput.value) executeCompare();
+                });
+            }
+
+            if (alignTableBtn) {
+                alignTableBtn.addEventListener('click', () => {
+                    setAlignMode('table');
+                    if (originalInput.value || modifiedInput.value) executeCompare();
+                });
+            }
+
+            if (radioAlignSeq) {
+                radioAlignSeq.addEventListener('change', () => setAlignMode('seq'));
+            }
+            if (radioAlignTable) {
+                radioAlignTable.addEventListener('change', () => setAlignMode('table'));
+            }
+
+            // Load Cisco Config Sample
             loadSampleBtn.addEventListener('click', () => {
+                setAlignMode('seq');
                 originalInput.value = sampleOriginal;
                 modifiedInput.value = sampleModified;
                 updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
@@ -2062,10 +2139,24 @@ end`;
                 executeCompare();
             });
 
+            // Load ARP Table Sample
+            if (loadSampleArpBtn) {
+                loadSampleArpBtn.addEventListener('click', () => {
+                    setAlignMode('table');
+                    originalInput.value = sampleArpOriginal;
+                    modifiedInput.value = sampleArpModified;
+                    updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
+                    updateInputLineNumbers(modifiedInput, linesModified, rightStatsBadge);
+                    showToast("Sample ARP tables loaded in Table Alignment Mode", "info");
+                    executeCompare();
+                });
+            }
+
             // ----------------------------------------------------
             // Rules & Normalization Engine (Beyond Compare logic)
             // ----------------------------------------------------
             function getRules() {
+                const ruleIgnoreArpAgeEl = document.getElementById('ruleIgnoreArpAge');
                 return {
                     ignoreLeadingSpace: ruleIgnoreLeadingSpace.checked,
                     ignoreTrailingSpace: ruleIgnoreTrailingSpace.checked,
@@ -2074,6 +2165,7 @@ end`;
                     ignoreBlankLines: ruleIgnoreBlankLines.checked,
                     ignoreComments: ruleIgnoreComments.checked,
                     ignoreTimestamps: ruleIgnoreTimestamps.checked,
+                    ignoreArpAge: ruleIgnoreArpAgeEl ? ruleIgnoreArpAgeEl.checked : true,
                     ignoreUnimportant: ruleIgnoreUnimportant.checked
                 };
             }
@@ -2110,13 +2202,28 @@ end`;
                 return text;
             }
 
+            // In ARP tables, age column constantly increments
+            function normalizeForComparison(line, rules) {
+                let text = normalizeLine(line, rules);
+                if (rules.ignoreArpAge) {
+                    const trimmed = text.trim();
+                    const tokens = trimmed.split(/\s+/);
+                    // Cisco ARP table format: Internet <IP> <Age> <MAC> <Type> <Interface>
+                    if (tokens.length >= 5 && tokens[0].toLowerCase() === 'internet') {
+                        tokens[2] = '*AGE*';
+                        text = tokens.join(' ');
+                    }
+                }
+                return text;
+            }
+
             // Determine if a difference between lineA and lineB is "unimportant"
             function checkUnimportance(lineA, lineB, rules) {
                 if (lineA === lineB) return false;
 
                 // Case 1: Identical after normalization
-                const normA = normalizeLine(lineA, rules);
-                const normB = normalizeLine(lineB, rules);
+                const normA = normalizeForComparison(lineA, rules);
+                const normB = normalizeForComparison(lineB, rules);
                 if (normA === normB) return true;
 
                 // Case 2: Comments difference
@@ -2130,6 +2237,261 @@ end`;
                 }
 
                 return false;
+            }
+
+            // Natural IPv4 to 32-bit unsigned number for sorting
+            function ipToNumber(ip) {
+                const parts = ip.split('.').map(Number);
+                if (parts.length !== 4 || parts.some(p => isNaN(p) || p < 0 || p > 255)) return null;
+                return ((parts[0] << 24) >>> 0) + (parts[1] << 16) + (parts[2] << 8) + parts[3];
+            }
+
+            // Extract table key (IP, MAC, Interface, or first tokens)
+            function extractTableKey(line) {
+                if (!line) return '';
+                const trimmed = line.trim();
+                if (!trimmed) return '';
+
+                const tokens = trimmed.split(/\s+/);
+
+                // Cisco ARP: "Internet 10.1.1.1 1 0000.0c07.ac01 ARPA Vlan10"
+                if (tokens[0].toLowerCase() === 'internet' && tokens.length >= 2) {
+                    return `ip:${tokens[1]}`;
+                }
+
+                // Any IPv4 address in line
+                const ipMatch = trimmed.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);
+                if (ipMatch) {
+                    return `ip:${ipMatch[0]}`;
+                }
+
+                // MAC Address (Cisco / Standard)
+                const macMatch = trimmed.match(/\b(?:[0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4}|(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2})\b/);
+                if (macMatch) {
+                    return `mac:${macMatch[0].toLowerCase()}`;
+                }
+
+                // Interface command
+                if (tokens[0].toLowerCase() === 'interface' && tokens[1]) {
+                    return `intf:${tokens[1].toLowerCase()}`;
+                }
+
+                if (tokens.length >= 2) {
+                    return `${tokens[0]} ${tokens[1]}`.toLowerCase();
+                }
+
+                return tokens[0].toLowerCase();
+            }
+
+            // ----------------------------------------------------
+            // Order-Tolerant Table / ARP Alignment Engine
+            // ----------------------------------------------------
+            function alignTableOrArp(rawOriginal, rawModified, rules) {
+                const origLinesRaw = rawOriginal.split('\n');
+                if (rawOriginal.endsWith('\n')) origLinesRaw.pop();
+
+                const modLinesRaw = rawModified.split('\n');
+                if (rawModified.endsWith('\n')) modLinesRaw.pop();
+
+                const leftItems = origLinesRaw.map((line, idx) => ({
+                    num: idx + 1,
+                    text: line,
+                    trimmed: line.trim()
+                }));
+
+                const rightItems = modLinesRaw.map((line, idx) => ({
+                    num: idx + 1,
+                    text: line,
+                    trimmed: line.trim()
+                }));
+
+                function isHeaderLine(trimmed) {
+                    if (!trimmed) return false;
+                    if (trimmed.startsWith('!') || trimmed.startsWith('#')) return true;
+                    const lower = trimmed.toLowerCase();
+                    if ((lower.includes('protocol') && lower.includes('address')) ||
+                        (lower.includes('vlan') && lower.includes('mac')) ||
+                        (lower.includes('interface') && lower.includes('ip-address')) ||
+                        (lower.includes('destination') && lower.includes('gateway'))) {
+                        return true;
+                    }
+                    return false;
+                }
+
+                const aligned = [];
+
+                // Separate header lines at the top
+                const leftHeaders = [];
+                const rightHeaders = [];
+                const leftData = [];
+                const rightData = [];
+
+                let inLeftHeader = true;
+                for (const item of leftItems) {
+                    if (inLeftHeader && isHeaderLine(item.trimmed)) {
+                        leftHeaders.push(item);
+                    } else {
+                        inLeftHeader = false;
+                        leftData.push(item);
+                    }
+                }
+
+                let inRightHeader = true;
+                for (const item of rightItems) {
+                    if (inRightHeader && isHeaderLine(item.trimmed)) {
+                        rightHeaders.push(item);
+                    } else {
+                        inRightHeader = false;
+                        rightData.push(item);
+                    }
+                }
+
+                // Align headers at the very top
+                const maxHeaders = Math.max(leftHeaders.length, rightHeaders.length);
+                for (let i = 0; i < maxHeaders; i++) {
+                    const l = leftHeaders[i] || null;
+                    const r = rightHeaders[i] || null;
+                    const isSame = l && r && (normalizeForComparison(l.text, rules) === normalizeForComparison(r.text, rules));
+                    aligned.push({
+                        leftNum: l ? l.num : null,
+                        leftText: l ? l.text : null,
+                        rightNum: r ? r.num : null,
+                        rightText: r ? r.text : null,
+                        type: isSame ? 'same' : 'modified',
+                        isUnimportant: isSame ? false : (l && r ? checkUnimportance(l.text, r.text, rules) : false),
+                        isChangePair: Boolean(l && r)
+                    });
+                }
+
+                // Index right items by key
+                const rightAvailable = new Map();
+                for (const r of rightData) {
+                    if (rules.ignoreBlankLines && !r.trimmed) continue;
+                    const k = extractTableKey(r.text);
+                    if (!rightAvailable.has(k)) rightAvailable.set(k, []);
+                    rightAvailable.get(k).push(r);
+                }
+
+                const matchedPairs = [];
+                const unmatchedLeft = [];
+
+                // Match left items
+                for (const l of leftData) {
+                    if (rules.ignoreBlankLines && !l.trimmed) continue;
+                    const k = extractTableKey(l.text);
+                    const lNorm = normalizeForComparison(l.text, rules);
+                    const candidates = rightAvailable.get(k);
+
+                    let matchIdx = -1;
+                    if (candidates && candidates.length > 0) {
+                        // Find exact match first
+                        for (let c = 0; c < candidates.length; c++) {
+                            if (normalizeForComparison(candidates[c].text, rules) === lNorm) {
+                                matchIdx = c;
+                                break;
+                            }
+                        }
+                        // Fallback: match by key (modified row)
+                        if (matchIdx === -1) {
+                            matchIdx = 0;
+                        }
+                    }
+
+                    if (matchIdx !== -1) {
+                        const r = candidates.splice(matchIdx, 1)[0];
+                        matchedPairs.push({ l, r, key: k });
+                    } else {
+                        unmatchedLeft.push({ l, key: k });
+                    }
+                }
+
+                // Collect remaining unmatched right items
+                const unmatchedRight = [];
+                for (const [k, list] of rightAvailable.entries()) {
+                    for (const r of list) {
+                        unmatchedRight.push({ r, key: k });
+                    }
+                }
+
+                // Build unified data rows
+                const dataRows = [];
+
+                for (const pair of matchedPairs) {
+                    const l = pair.l;
+                    const r = pair.r;
+                    const isIdentical = normalizeForComparison(l.text, rules) === normalizeForComparison(r.text, rules);
+                    let isUnimp = false;
+                    let type = 'same';
+
+                    if (!isIdentical) {
+                        type = 'modified';
+                        isUnimp = checkUnimportance(l.text, r.text, rules);
+                        if (isUnimp && rules.ignoreUnimportant) {
+                            type = 'same';
+                        }
+                    }
+
+                    dataRows.push({
+                        key: pair.key,
+                        leftNum: l.num,
+                        leftText: l.text,
+                        rightNum: r.num,
+                        rightText: r.text,
+                        type: type,
+                        isUnimportant: isUnimp,
+                        isChangePair: true
+                    });
+                }
+
+                for (const item of unmatchedLeft) {
+                    dataRows.push({
+                        key: item.key,
+                        leftNum: item.l.num,
+                        leftText: item.l.text,
+                        rightNum: null,
+                        rightText: null,
+                        type: 'removed',
+                        isUnimportant: false,
+                        isChangePair: false
+                    });
+                }
+
+                for (const item of unmatchedRight) {
+                    dataRows.push({
+                        key: item.key,
+                        leftNum: null,
+                        leftText: null,
+                        rightNum: item.r.num,
+                        rightText: item.r.text,
+                        type: 'added',
+                        isUnimportant: false,
+                        isChangePair: false
+                    });
+                }
+
+                // Sort data rows naturally by key / IP
+                function compareTableKeys(a, b) {
+                    const keyA = a.key || '';
+                    const keyB = b.key || '';
+
+                    if (keyA.startsWith('ip:') && keyB.startsWith('ip:')) {
+                        const numA = ipToNumber(keyA.slice(3));
+                        const numB = ipToNumber(keyB.slice(3));
+                        if (numA !== null && numB !== null) {
+                            return numA - numB;
+                        }
+                    }
+
+                    return keyA.localeCompare(keyB, undefined, { numeric: true, sensitivity: 'base' });
+                }
+
+                dataRows.sort(compareTableKeys);
+
+                for (const row of dataRows) {
+                    aligned.push(row);
+                }
+
+                return aligned;
             }
 
             // ----------------------------------------------------
@@ -2147,151 +2509,148 @@ end`;
 
                 const rules = getRules();
 
-                // Compute Line-level diff with jsdiff
-                const diffResult = Diff.diffLines(rawOriginal, rawModified, {
-                    newlineIsToken: false,
-                    ignoreWhitespace: false
-                });
+                if (currentAlignMode === 'table') {
+                    // Use Order-Tolerant Table / ARP Alignment
+                    alignedLinesData = alignTableOrArp(rawOriginal, rawModified, rules);
+                } else {
+                    // Sequential Line-level diff with jsdiff
+                    const diffResult = Diff.diffLines(rawOriginal, rawModified, {
+                        newlineIsToken: false,
+                        ignoreWhitespace: false
+                    });
 
-                // Generate unified patch for export
-                try {
-                    lastPatchText = Diff.createPatch("original.cfg", rawOriginal, rawModified, "Left (Original)", "Right (Modified)");
-                } catch (e) {
-                    lastPatchText = '';
-                }
+                    alignedLinesData = [];
+                    let leftLineNum = 1;
+                    let rightLineNum = 1;
+                    let i = 0;
 
-                // Process chunks into aligned side-by-side data model
-                alignedLinesData = [];
-                let leftLineNum = 1;
-                let rightLineNum = 1;
-                let i = 0;
+                    while (i < diffResult.length) {
+                        const part = diffResult[i];
 
-                while (i < diffResult.length) {
-                    const part = diffResult[i];
+                        if (part.removed) {
+                            // Check if immediately followed by added (Change block)
+                            if (i + 1 < diffResult.length && diffResult[i + 1].added) {
+                                const removedPart = part;
+                                const addedPart = diffResult[i + 1];
 
-                    if (part.removed) {
-                        // Check if immediately followed by added (Change block)
-                        if (i + 1 < diffResult.length && diffResult[i + 1].added) {
-                            const removedPart = part;
-                            const addedPart = diffResult[i + 1];
+                                const remLines = removedPart.value.split('\n');
+                                if (removedPart.value.endsWith('\n')) remLines.pop();
 
-                            const remLines = removedPart.value.split('\n');
-                            if (removedPart.value.endsWith('\n')) remLines.pop();
+                                const addLines = addedPart.value.split('\n');
+                                if (addedPart.value.endsWith('\n')) addLines.pop();
 
-                            const addLines = addedPart.value.split('\n');
-                            if (addedPart.value.endsWith('\n')) addLines.pop();
+                                const maxLen = Math.max(remLines.length, addLines.length);
 
-                            const maxLen = Math.max(remLines.length, addLines.length);
+                                for (let j = 0; j < maxLen; j++) {
+                                    const hasLeft = j < remLines.length;
+                                    const hasRight = j < addLines.length;
+                                    const lText = hasLeft ? remLines[j] : null;
+                                    const rText = hasRight ? addLines[j] : null;
 
-                            for (let j = 0; j < maxLen; j++) {
-                                const hasLeft = j < remLines.length;
-                                const hasRight = j < addLines.length;
-                                const lText = hasLeft ? remLines[j] : null;
-                                const rText = hasRight ? addLines[j] : null;
+                                    let type = 'modified';
+                                    let isUnimportant = false;
 
-                                let type = 'modified';
-                                let isUnimportant = false;
-
-                                if (hasLeft && hasRight) {
-                                    isUnimportant = checkUnimportance(lText, rText, rules);
-                                    if (isUnimportant && rules.ignoreUnimportant) {
-                                        type = 'same';
+                                    if (hasLeft && hasRight) {
+                                        isUnimportant = checkUnimportance(lText, rText, rules);
+                                        if (isUnimportant && rules.ignoreUnimportant) {
+                                            type = 'same';
+                                        }
+                                    } else if (hasLeft) {
+                                        if (rules.ignoreBlankLines && lText.trim() === '') {
+                                            type = 'same';
+                                        } else {
+                                            type = 'removed';
+                                        }
+                                    } else if (hasRight) {
+                                        if (rules.ignoreBlankLines && rText.trim() === '') {
+                                            type = 'same';
+                                        } else {
+                                            type = 'added';
+                                        }
                                     }
-                                } else if (hasLeft) {
-                                    if (rules.ignoreBlankLines && lText.trim() === '') {
-                                        type = 'same';
-                                    } else {
-                                        type = 'removed';
-                                    }
-                                } else if (hasRight) {
-                                    if (rules.ignoreBlankLines && rText.trim() === '') {
-                                        type = 'same';
-                                    } else {
-                                        type = 'added';
-                                    }
+
+                                    alignedLinesData.push({
+                                        leftNum: hasLeft ? leftLineNum++ : null,
+                                        leftText: lText,
+                                        rightNum: hasRight ? rightLineNum++ : null,
+                                        rightText: rText,
+                                        type: type, // 'same' | 'added' | 'removed' | 'modified'
+                                        isUnimportant: isUnimportant,
+                                        isChangePair: hasLeft && hasRight
+                                    });
                                 }
+                                i += 2;
+                            } else {
+                                // Purely removed block
+                                const remLines = part.value.split('\n');
+                                if (part.value.endsWith('\n')) remLines.pop();
 
-                                alignedLinesData.push({
-                                    leftNum: hasLeft ? leftLineNum++ : null,
-                                    leftText: lText,
-                                    rightNum: hasRight ? rightLineNum++ : null,
-                                    rightText: rText,
-                                    type: type, // 'same' | 'added' | 'removed' | 'modified'
-                                    isUnimportant: isUnimportant,
-                                    isChangePair: hasLeft && hasRight
+                                remLines.forEach(line => {
+                                    const isBlank = rules.ignoreBlankLines && line.trim() === '';
+                                    const isUnimp = (rules.ignoreComments && isCommentLine(line)) ||
+                                        (rules.ignoreTimestamps && isVolatileLine(line));
+
+                                    let type = 'removed';
+                                    if (isBlank || (isUnimp && rules.ignoreUnimportant)) {
+                                        type = 'same';
+                                    }
+
+                                    alignedLinesData.push({
+                                        leftNum: leftLineNum++,
+                                        leftText: line,
+                                        rightNum: null,
+                                        rightText: null,
+                                        type: type,
+                                        isUnimportant: isUnimp,
+                                        isChangePair: false
+                                    });
                                 });
+                                i++;
                             }
-                            i += 2;
-                        } else {
-                            // Purely removed block
-                            const remLines = part.value.split('\n');
-                            if (part.value.endsWith('\n')) remLines.pop();
+                        } else if (part.added) {
+                            // Purely added block
+                            const addLines = part.value.split('\n');
+                            if (part.value.endsWith('\n')) addLines.pop();
 
-                            remLines.forEach(line => {
+                            addLines.forEach(line => {
                                 const isBlank = rules.ignoreBlankLines && line.trim() === '';
-                                const isUnimp = rules.ignoreComments && isCommentLine(line) ||
-                                    rules.ignoreTimestamps && isVolatileLine(line);
+                                const isUnimp = (rules.ignoreComments && isCommentLine(line)) ||
+                                    (rules.ignoreTimestamps && isVolatileLine(line));
 
-                                let type = 'removed';
+                                let type = 'added';
                                 if (isBlank || (isUnimp && rules.ignoreUnimportant)) {
                                     type = 'same';
                                 }
 
                                 alignedLinesData.push({
-                                    leftNum: leftLineNum++,
-                                    leftText: line,
-                                    rightNum: null,
-                                    rightText: null,
+                                    leftNum: null,
+                                    leftText: null,
+                                    rightNum: rightLineNum++,
+                                    rightText: line,
                                     type: type,
                                     isUnimportant: isUnimp,
                                     isChangePair: false
                                 });
                             });
                             i++;
+                        } else {
+                            // Unchanged (Identical lines)
+                            const sameLines = part.value.split('\n');
+                            if (part.value.endsWith('\n')) sameLines.pop();
+
+                            sameLines.forEach(line => {
+                                alignedLinesData.push({
+                                    leftNum: leftLineNum++,
+                                    leftText: line,
+                                    rightNum: rightLineNum++,
+                                    rightText: line,
+                                    type: 'same',
+                                    isUnimportant: false,
+                                    isChangePair: false
+                                });
+                            });
+                            i++;
                         }
-                    } else if (part.added) {
-                        // Purely added block
-                        const addLines = part.value.split('\n');
-                        if (part.value.endsWith('\n')) addLines.pop();
-
-                        addLines.forEach(line => {
-                            const isBlank = rules.ignoreBlankLines && line.trim() === '';
-                            const isUnimp = rules.ignoreComments && isCommentLine(line) ||
-                                rules.ignoreTimestamps && isVolatileLine(line);
-
-                            let type = 'added';
-                            if (isBlank || (isUnimp && rules.ignoreUnimportant)) {
-                                type = 'same';
-                            }
-
-                            alignedLinesData.push({
-                                leftNum: null,
-                                leftText: null,
-                                rightNum: rightLineNum++,
-                                rightText: line,
-                                type: type,
-                                isUnimportant: isUnimp,
-                                isChangePair: false
-                            });
-                        });
-                        i++;
-                    } else {
-                        // Unchanged (Identical lines)
-                        const sameLines = part.value.split('\n');
-                        if (part.value.endsWith('\n')) sameLines.pop();
-
-                        sameLines.forEach(line => {
-                            alignedLinesData.push({
-                                leftNum: leftLineNum++,
-                                leftText: line,
-                                rightNum: rightLineNum++,
-                                rightText: line,
-                                type: 'same',
-                                isUnimportant: false,
-                                isChangePair: false
-                            });
-                        });
-                        i++;
                     }
                 }
 
@@ -2465,16 +2824,16 @@ end`;
 
                 if (row.type === 'removed') {
                     rowClass = 'row-removed';
-                    sign = '-';
+                    sign = '≠';
                 } else if (row.type === 'modified') {
                     if (row.isChangePair) {
                         rowClass = row.isUnimportant ? 'row-unimportant' : 'row-modified-left';
-                        sign = row.isUnimportant ? '•' : '~';
+                        sign = row.isUnimportant ? '•' : '≠';
                         const intra = renderIntraLineDiff(row.leftText, row.rightText, row.isUnimportant);
                         contentHTML = intra.leftHTML;
                     } else {
                         rowClass = 'row-removed';
-                        sign = '-';
+                        sign = '≠';
                     }
                 } else if (row.type === 'added') {
                     rowClass = 'row-empty';
@@ -2503,16 +2862,16 @@ end`;
 
                 if (row.type === 'added') {
                     rowClass = 'row-added';
-                    sign = '+';
+                    sign = '≠';
                 } else if (row.type === 'modified') {
                     if (row.isChangePair) {
                         rowClass = row.isUnimportant ? 'row-unimportant' : 'row-modified-right';
-                        sign = row.isUnimportant ? '•' : '~';
+                        sign = row.isUnimportant ? '•' : '≠';
                         const intra = renderIntraLineDiff(row.leftText, row.rightText, row.isUnimportant);
                         contentHTML = intra.rightHTML;
                     } else {
                         rowClass = 'row-added';
-                        sign = '+';
+                        sign = '≠';
                     }
                 } else if (row.type === 'removed') {
                     rowClass = 'row-empty';
@@ -2560,10 +2919,19 @@ end`;
                     } else same++;
                 });
 
-                addedCountEl.textContent = added;
-                removedCountEl.textContent = removed;
-                modifiedCountEl.textContent = modified;
-                sameCountEl.textContent = same;
+                const totalDiffLines = added + removed + modified;
+
+                const diffTotalCountEl = document.getElementById('diffTotalCount');
+                if (diffTotalCountEl) diffTotalCountEl.textContent = totalDiffLines;
+                const statDiffTotal = document.getElementById('statDiffTotal');
+                if (statDiffTotal) {
+                    statDiffTotal.style.display = totalDiffLines > 0 ? 'inline-flex' : 'none';
+                }
+
+                if (addedCountEl) addedCountEl.textContent = added;
+                if (removedCountEl) removedCountEl.textContent = removed;
+                if (modifiedCountEl) modifiedCountEl.textContent = modified;
+                if (sameCountEl) sameCountEl.textContent = same;
 
                 if (unimportant > 0) {
                     statUnimportant.style.display = 'inline-flex';
@@ -2571,8 +2939,6 @@ end`;
                 } else {
                     statUnimportant.style.display = 'none';
                 }
-
-                const totalDiffLines = added + removed + modified;
 
                 if (totalDiffLines === 0 && unimportant === 0) {
                     statusDot.className = 'status-dot match';
@@ -2584,7 +2950,7 @@ end`;
                     showToast(`Files match with ${unimportant} unimportant differences`, "info");
                 } else {
                     statusDot.className = 'status-dot diff';
-                    statusMessage.textContent = `Differences found (${totalDiffLines} changed lines)`;
+                    statusMessage.textContent = `Differences found (${totalDiffLines} mismatch lines)`;
                     showToast(`Found ${totalDiffLines} difference line${totalDiffLines > 1 ? 's' : ''}`, "warning");
                 }
             }
@@ -2729,14 +3095,11 @@ end`;
                     const row = alignedLinesData[i];
                     const y = (i / total) * height;
 
-                    if (row.type === 'added') {
-                        ctx.fillStyle = '#10b981';
-                        ctx.fillRect(0, y, width, lineH);
-                    } else if (row.type === 'removed') {
+                    if (row.type === 'added' || row.type === 'removed') {
                         ctx.fillStyle = '#ef4444';
                         ctx.fillRect(0, y, width, lineH);
                     } else if (row.type === 'modified') {
-                        ctx.fillStyle = row.isUnimportant ? '#3b82f6' : '#f59e0b';
+                        ctx.fillStyle = row.isUnimportant ? '#3b82f6' : '#ef4444';
                         ctx.fillRect(0, y, width, lineH);
                     }
                 }
