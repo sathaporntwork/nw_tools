@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="Configuration Compare - Compare two text configurations side-by-side with difference highlighting">
-    <title>Configuration Compare</title>
+        content="Configuration Compare - Advanced text and network configuration comparison inspired by Beyond Compare with intra-line difference highlighting, rules, minimap, and display filters.">
+    <title>Configuration Compare — Beyond Compare Edition</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23f97316%22 stroke-width=%222%22><rect x=%223%22 y=%223%22 width=%2218%22 height=%2218%22 rx=%222%22/><path d=%22M9 3v18%22/><path d=%22M15 3v18%22/></svg>">
 
@@ -14,47 +14,361 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="assets/styles/common.css">
 
-    <!-- Diff Library -->
+    <!-- Diff Library (jsdiff) -->
     <script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
 
     <style>
-        /* Specific overrides for Compare tool */
+        /* ========================================================
+           Beyond Compare Layout & Styling for Configuration Compare
+           ======================================================== */
+        :root {
+            --bc-added-bg: rgba(16, 185, 129, 0.14);
+            --bc-added-border: rgba(16, 185, 129, 0.35);
+            --bc-added-inline: rgba(16, 185, 129, 0.38);
+            --bc-added-text: #a7f3d0;
+
+            --bc-removed-bg: rgba(239, 68, 68, 0.14);
+            --bc-removed-border: rgba(239, 68, 68, 0.35);
+            --bc-removed-inline: rgba(239, 68, 68, 0.38);
+            --bc-removed-text: #fecaca;
+
+            --bc-modified-left-bg: rgba(239, 68, 68, 0.10);
+            --bc-modified-right-bg: rgba(16, 185, 129, 0.10);
+
+            --bc-unimportant-bg: rgba(59, 130, 246, 0.14);
+            --bc-unimportant-border: rgba(59, 130, 246, 0.35);
+            --bc-unimportant-inline: rgba(59, 130, 246, 0.35);
+            --bc-unimportant-text: #bfdbfe;
+
+            --bc-line-num-bg: rgba(0, 0, 0, 0.25);
+            --bc-line-num-color: #71717a;
+            --bc-gutter-bg: rgba(0, 0, 0, 0.15);
+            --bc-minimap-width: 22px;
+        }
+
+        [data-theme="light"] {
+            --bc-added-bg: rgba(16, 185, 129, 0.15);
+            --bc-added-border: rgba(16, 185, 129, 0.4);
+            --bc-added-inline: rgba(16, 185, 129, 0.3);
+            --bc-added-text: #064e3b;
+
+            --bc-removed-bg: rgba(239, 68, 68, 0.15);
+            --bc-removed-border: rgba(239, 68, 68, 0.4);
+            --bc-removed-inline: rgba(239, 68, 68, 0.28);
+            --bc-removed-text: #7f1d1d;
+
+            --bc-modified-left-bg: rgba(239, 68, 68, 0.10);
+            --bc-modified-right-bg: rgba(16, 185, 129, 0.10);
+
+            --bc-unimportant-bg: rgba(59, 130, 246, 0.12);
+            --bc-unimportant-border: rgba(59, 130, 246, 0.35);
+            --bc-unimportant-inline: rgba(59, 130, 246, 0.25);
+            --bc-unimportant-text: #1e3a8a;
+
+            --bc-line-num-bg: rgba(0, 0, 0, 0.05);
+            --bc-line-num-color: #64748b;
+            --bc-gutter-bg: rgba(0, 0, 0, 0.03);
+        }
+
+        body {
+            justify-content: flex-start;
+            padding-top: 1.25rem;
+            padding-bottom: 3rem;
+        }
+
         .container {
-            max-width: 95%;
-            /* Use more width for side-by-side comparison */
+            width: 98%;
+            max-width: 1700px;
+            margin: 0 auto;
         }
 
-        .compare-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .compare-pane {
+        .header {
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .home-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 0.45rem 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            transition: all 0.2s ease;
+        }
+
+        .home-link:hover {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+
+        .header-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-title-wrap h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        .badge-bc {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
             gap: 0.5rem;
         }
 
-        .pane-header {
-            font-weight: 600;
-            color: var(--text-muted);
-            text-align: center;
+        /* Top Command Toolbar */
+        .toolbar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px -5px var(--shadow-color);
         }
 
-        /* Adjust textarea for this page */
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-toolbar {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.85rem;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .btn-toolbar:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+
+        .btn-toolbar.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .btn-primary-action {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 14px -3px rgba(16, 185, 129, 0.45);
+        }
+
+        .btn-primary-action:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            box-shadow: 0 6px 18px -3px rgba(16, 185, 129, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger-action {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            color: white;
+            border: none;
+        }
+
+        .btn-danger-action:hover {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Segmented Button Groups (Filter / View Mode) */
+        .segmented-group {
+            display: inline-flex;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .segmented-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .segmented-btn:hover {
+            color: var(--text-main);
+        }
+
+        .segmented-btn.active {
+            background: var(--bg-card);
+            color: var(--accent-primary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border-color);
+        }
+
+        .context-select {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 7px;
+            padding: 0.35rem 0.5rem;
+            font-size: 12px;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Input Cards Grid */
+        .compare-inputs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .compare-inputs-grid.collapsed {
+            display: none;
+        }
+
+        .input-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            box-shadow: 0 10px 25px -10px var(--shadow-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .pane-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .pane-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .pane-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.15);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+
+        .pane-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .btn-icon-sm {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon-sm:hover {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+
         .input-wrapper {
             display: flex;
             border: 1px solid var(--border-color);
             background: var(--bg-input);
-            border-radius: 12px;
+            border-radius: 10px;
             overflow: hidden;
-            height: 230px;
+            height: 240px;
+            position: relative;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .input-wrapper:focus-within {
@@ -62,25 +376,29 @@
             box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
         }
 
+        .input-wrapper.drag-over {
+            border: 2px dashed var(--accent-primary);
+            background: rgba(249, 115, 22, 0.05);
+        }
+
         .input-line-numbers {
-            background-color: rgba(0, 0, 0, 0.05);
-            /* very subtle */
-            color: var(--text-muted);
+            background-color: var(--bc-line-num-bg);
+            color: var(--bc-line-num-color);
             text-align: right;
-            padding: 1rem 0.5rem;
-            width: 45px;
-            min-width: 45px;
+            padding: 0.75rem 0.45rem;
+            width: 48px;
+            min-width: 48px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
+            font-size: 12px;
             line-height: 1.5;
             user-select: none;
             overflow: hidden;
             border-right: 1px solid var(--border-color);
         }
 
-        textarea {
+        textarea.code-input {
             height: 100%;
-            font-size: 13px;
+            font-size: 12.5px;
             font-family: 'JetBrains Mono', monospace;
             line-height: 1.5;
             flex: 1;
@@ -89,307 +407,555 @@
             white-space: pre;
             overflow: auto;
             resize: none;
-            padding: 1rem;
+            padding: 0.75rem;
             background: transparent;
+            color: var(--text-main);
+            outline: none;
+            tab-size: 4;
         }
 
-        textarea:focus {
-            box-shadow: none;
-            border: none;
-            background: transparent;
-        }
-
-        /* Result Area */
-        .diff-container {
-            display: none;
-            /* Hidden by default */
+        /* Summary & Stats Banner */
+        .diff-summary-bar {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            overflow: hidden;
-            margin-top: 2rem;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            padding: 0.65rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 15px -3px var(--shadow-color);
         }
 
-        .diff-grid {
+        .summary-status {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.match {
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        .status-dot.diff {
+            background: #f97316;
+            box-shadow: 0 0 10px #f97316;
+        }
+
+        .status-dot.unimportant {
+            background: #3b82f6;
+            box-shadow: 0 0 10px #3b82f6;
+        }
+
+        .summary-stats-pills {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-pill.added {
+            color: #10b981;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .stat-pill.removed {
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .stat-pill.modified {
+            color: #f59e0b;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .stat-pill.same {
+            color: var(--text-muted);
+        }
+
+        .stat-pill.unimportant {
+            color: #3b82f6;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Main Diff Viewer Container */
+        .diff-viewer-wrapper {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px -15px var(--shadow-color);
+            display: none;
+            /* Shown after comparison */
+        }
+
+        .diff-viewer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 1rem;
+            background: rgba(0, 0, 0, 0.15);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .diff-viewer-header-left,
+        .diff-viewer-header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .diff-stage {
+            display: flex;
+            position: relative;
+            min-height: 400px;
+            max-height: 75vh;
+            overflow: hidden;
+        }
+
+        /* Side-by-side Dual Scroll Grid */
+        .diff-panes-container {
+            flex: 1;
             display: grid;
             grid-template-columns: 1fr 1fr;
+            overflow: auto;
+            position: relative;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            line-height: 1.5;
-            overflow-x: auto;
+            font-size: 12.5px;
+            line-height: 1.6;
         }
 
-        .diff-side {
-            padding: 1rem 0;
-            overflow-x: auto;
+        /* Unified / Inline Mode */
+        .diff-viewer-wrapper.inline-mode .diff-panes-container {
+            grid-template-columns: 1fr;
         }
 
-        .diff-side.left {
+        .diff-pane-view {
+            overflow: visible;
+            min-width: 0;
+        }
+
+        .diff-pane-view.left-pane {
             border-right: 1px solid var(--border-color);
         }
 
-        .diff-line {
+        /* Diff Lines & Rows */
+        .diff-row {
             display: flex;
             width: 100%;
             min-width: fit-content;
+            transition: background 0.15s ease;
         }
 
-        .line-number {
-            width: 40px;
-            min-width: 40px;
-            text-align: right;
-            padding-right: 0.5rem;
-            color: var(--text-muted);
-            user-select: none;
-            border-right: 1px solid var(--border-color);
-            margin-right: 0.5rem;
-            opacity: 0.5;
-            background: rgba(0, 0, 0, 0.1);
+        .diff-row:hover {
+            filter: brightness(1.08);
         }
 
-        .line-content {
-            padding-right: 1rem;
-            white-space: pre;
-            flex: 1;
-        }
-
-        /* Diff Colors */
-        .diff-added {
-            background-color: rgba(16, 185, 129, 0.2);
-            color: #d1fae5;
-        }
-
-        [data-theme="light"] .diff-added {
-            background-color: rgba(16, 185, 129, 0.2);
-            color: #064e3b;
-        }
-
-        .diff-removed {
-            background-color: rgba(239, 68, 68, 0.2);
-            color: #fee2e2;
-        }
-
-        [data-theme="light"] .diff-removed {
-            background-color: rgba(239, 68, 68, 0.2);
-            color: #7f1d1d;
-        }
-
-        .diff-empty {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        /* Active/Current Diff Highlight */
-        .diff-line-active {
+        .diff-row.diff-active {
             outline: 2px solid var(--accent-primary) !important;
             outline-offset: -2px;
-            position: relative;
-            animation: pulseHighlight 1.5s ease-in-out;
+            background-color: rgba(249, 115, 22, 0.22) !important;
+            animation: pulseGlow 1.8s ease-in-out infinite;
         }
 
-        @keyframes pulseHighlight {
+        @keyframes pulseGlow {
 
             0%,
             100% {
-                outline-color: var(--accent-primary);
-                background-color: rgba(249, 115, 22, 0.15);
+                box-shadow: inset 0 0 0 1px var(--accent-primary);
             }
 
             50% {
-                outline-color: var(--accent-primary);
-                background-color: rgba(249, 115, 22, 0.25);
+                box-shadow: inset 0 0 12px rgba(249, 115, 22, 0.4);
             }
         }
 
-        /* Compact mode - hide unchanged lines but keep context */
-        .diff-container.compact-mode .diff-line.hidden-line {
-            display: none;
+        .line-gutter {
+            width: 52px;
+            min-width: 52px;
+            text-align: right;
+            padding: 0 0.5rem;
+            color: var(--bc-line-num-color);
+            background: var(--bc-line-num-bg);
+            border-right: 1px solid var(--border-color);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            font-size: 11.5px;
         }
 
-        .diff-separator {
-            background: rgba(0, 0, 0, 0.1);
+        .line-sign {
+            width: 12px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .line-text {
+            flex: 1;
+            padding: 0 0.85rem;
+            white-space: pre;
+            overflow: visible;
+            word-break: normal;
+        }
+
+        /* Line Color States */
+        .diff-row.row-added {
+            background-color: var(--bc-added-bg);
+            color: var(--bc-added-text);
+        }
+
+        .diff-row.row-added .line-sign {
+            color: #10b981;
+        }
+
+        .diff-row.row-removed {
+            background-color: var(--bc-removed-bg);
+            color: var(--bc-removed-text);
+        }
+
+        .diff-row.row-removed .line-sign {
+            color: #ef4444;
+        }
+
+        .diff-row.row-modified-left {
+            background-color: var(--bc-modified-left-bg);
+            color: var(--bc-removed-text);
+        }
+
+        .diff-row.row-modified-left .line-sign {
+            color: #f59e0b;
+        }
+
+        .diff-row.row-modified-right {
+            background-color: var(--bc-modified-right-bg);
+            color: var(--bc-added-text);
+        }
+
+        .diff-row.row-modified-right .line-sign {
+            color: #10b981;
+        }
+
+        .diff-row.row-unimportant {
+            background-color: var(--bc-unimportant-bg);
+            color: var(--bc-unimportant-text);
+        }
+
+        .diff-row.row-unimportant .line-sign {
+            color: #3b82f6;
+        }
+
+        .diff-row.row-empty {
+            background: repeating-linear-gradient(45deg,
+                    rgba(0, 0, 0, 0.03),
+                    rgba(0, 0, 0, 0.03) 6px,
+                    rgba(0, 0, 0, 0.06) 6px,
+                    rgba(0, 0, 0, 0.06) 12px);
+        }
+
+        [data-theme="light"] .diff-row.row-empty {
+            background: repeating-linear-gradient(45deg,
+                    rgba(0, 0, 0, 0.02),
+                    rgba(0, 0, 0, 0.02) 6px,
+                    rgba(0, 0, 0, 0.04) 6px,
+                    rgba(0, 0, 0, 0.04) 12px);
+        }
+
+        /* Intra-line character / word highlighting */
+        .inline-diff-added {
+            background-color: var(--bc-added-inline);
+            border-radius: 3px;
+            box-shadow: 0 0 0 1px var(--bc-added-border);
+            font-weight: 600;
+            padding: 1px 2px;
+        }
+
+        .inline-diff-removed {
+            background-color: var(--bc-removed-inline);
+            border-radius: 3px;
+            box-shadow: 0 0 0 1px var(--bc-removed-border);
+            font-weight: 600;
+            padding: 1px 2px;
+            text-decoration: line-through;
+            text-decoration-thickness: 1.5px;
+        }
+
+        .inline-diff-unimportant {
+            background-color: var(--bc-unimportant-inline);
+            border-radius: 3px;
+            box-shadow: 0 0 0 1px var(--bc-unimportant-border);
+            padding: 1px 2px;
+        }
+
+        /* Collapsed / Omitted Separator */
+        .diff-fold-separator {
+            grid-column: 1 / -1;
+            background: var(--bc-gutter-bg);
             border-top: 1px dashed var(--border-color);
             border-bottom: 1px dashed var(--border-color);
-            padding: 0.5rem;
+            padding: 0.5rem 1rem;
             text-align: center;
             color: var(--text-muted);
             font-size: 12px;
             font-style: italic;
-            margin: 0.25rem 0;
-        }
-
-        /* Controls */
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            box-shadow: none;
-        }
-
-        .btn-secondary:hover {
-            backdrop-filter: brightness(1.1);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .compare-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .diff-grid {
-                grid-template-columns: 1fr;
-                /* Stack results on mobile */
-            }
-
-            .diff-side.left {
-                border-right: none;
-                border-bottom: 1px solid var(--border-color);
-            }
-        }
-
-        /* Drag and Drop Styling */
-        /* Drag and Drop Styling */
-        .input-wrapper.drag-over {
-            border: 2px dashed var(--accent-primary);
-            background: rgba(249, 115, 22, 0.05);
-        }
-
-        /* Footer override if needed */
-        .footer {
-            margin-top: auto;
-            padding-bottom: 2rem;
-        }
-
-        /* Body alignment overrides */
-        body {
-            justify-content: flex-start;
-            padding-top: 2rem;
-        }
-
-        /* Button Colors */
-        /* Button Colors */
-        #compareBtn {
-            background-image: linear-gradient(135deg, #34d399, #059669);
-            box-shadow: 0 4px 15px -3px rgba(16, 185, 129, 0.4);
-            overflow: visible;
-            /* Ensure nothing is clipped */
-        }
-
-        #compareBtn:hover {
-            box-shadow: 0 8px 20px -3px rgba(16, 185, 129, 0.6);
-            background-image: linear-gradient(135deg, #10b981, #047857);
-            transform: translateY(-2px);
-        }
-
-        #clearBtn {
-            background-image: linear-gradient(135deg, #f87171, #b91c1c);
-            color: white;
-            border: none;
-            box-shadow: 0 4px 15px -3px rgba(239, 68, 68, 0.4);
-            overflow: visible;
-        }
-
-        #clearBtn:hover {
-            box-shadow: 0 8px 20px -3px rgba(239, 68, 68, 0.6);
-            background-image: linear-gradient(135deg, #ef4444, #991b1b);
-            transform: translateY(-2px);
-        }
-
-        /* Remove the common.css 'shine' effect overlay which might be making it look solid/flat */
-        #compareBtn::after,
-        #clearBtn::after {
-            display: none;
-        }
-
-        /* Floating Navigation Buttons */
-        .diff-nav {
-            position: fixed;
-            top: 50%;
-            transform: translateY(-50%);
-            right: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .diff-counter {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 0;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            min-width: 75px;
-            max-width: 75px;
-            width: 75px;
-            height: 22px;
-            text-align: center;
-            outline: none;
             cursor: pointer;
+            user-select: none;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            line-height: 1;
+            gap: 0.5rem;
         }
 
-        .diff-counter:hover {
-            border-color: var(--accent-primary);
+        .diff-fold-separator:hover {
+            background: rgba(249, 115, 22, 0.1);
             color: var(--accent-primary);
         }
 
-        .diff-counter:focus {
+        /* Beyond Compare Vertical Thumbnail Overview (Minimap) */
+        .diff-minimap {
+            width: var(--bc-minimap-width);
+            min-width: var(--bc-minimap-width);
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 1px solid var(--border-color);
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        [data-theme="light"] .diff-minimap {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .minimap-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .minimap-slider {
+            position: absolute;
+            left: 1px;
+            right: 1px;
+            background: rgba(249, 115, 22, 0.25);
+            border: 1px solid var(--accent-primary);
+            border-radius: 2px;
+            pointer-events: none;
+            transition: top 0.05s linear;
+        }
+
+        /* Floating Navigation Dock (Beyond Compare style) */
+        .diff-nav-dock {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+            z-index: 100;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .diff-nav-dock.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .nav-dock-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-dock-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .nav-dock-counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-main);
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.4rem 0.65rem;
+            min-width: 80px;
+            text-align: center;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .nav-dock-counter:focus {
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
             cursor: text;
         }
 
-        .diff-nav.visible {
+        /* Rules & Settings Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-backdrop.show {
             opacity: 1;
             pointer-events: auto;
         }
 
-        .diff-nav-btn {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 1px solid var(--border-color);
+        .modal-dialog {
             background: var(--bg-card);
-            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            width: 100%;
+            max-width: 580px;
+            padding: 1.5rem;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6);
+            transform: scale(0.95);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-backdrop.show .modal-dialog {
+            transform: scale(1);
+        }
+
+        .modal-header {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .rule-group {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .rule-group-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.65rem;
+            padding: 0.45rem 0;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
+            font-size: 13px;
+            color: var(--text-main);
         }
 
-        .diff-nav-btn:hover {
-            transform: translateY(-2px);
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
+        .rule-item input[type="checkbox"] {
+            margin-top: 3px;
+            accent-color: var(--accent-primary);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
         }
 
-        .diff-nav-btn svg {
-            width: 18px;
-            height: 18px;
+        .rule-item-desc {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-color);
         }
 
         /* Toast Notification */
@@ -397,28 +963,24 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.8);
+            transform: translate(-50%, -50%) scale(0.85);
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            padding: 0.875rem 1.25rem;
-            border-radius: 10px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            z-index: 2000;
+            padding: 0.85rem 1.4rem;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            z-index: 3000;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.625rem;
+            gap: 0.65rem;
             opacity: 0;
             pointer-events: none;
             transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            backdrop-filter: blur(12px);
-            font-weight: 500;
-            font-size: 14px;
-            max-width: max-content;
-            width: auto;
-            min-width: 200px;
-            max-height: 48px;
-            height: auto;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            font-weight: 600;
+            font-size: 13.5px;
             white-space: nowrap;
         }
 
@@ -430,73 +992,103 @@
 
         .toast.success {
             border: none !important;
-            background: linear-gradient(135deg, #34d399, #10b981, #059669) !important;
+            background: linear-gradient(135deg, #10b981, #059669) !important;
             color: white !important;
-            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.5) !important;
-        }
-
-        [data-theme="light"] .toast.success {
-            background: linear-gradient(135deg, #6ee7b7, #34d399, #10b981) !important;
-            color: white !important;
-            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.5) !important;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5) !important;
         }
 
         .toast.warning {
             border: none !important;
-            background: linear-gradient(135deg, #fb923c, #f97316, #ea580c) !important;
+            background: linear-gradient(135deg, #f97316, #ea580c) !important;
             color: white !important;
-            box-shadow: 0 8px 32px rgba(249, 115, 22, 0.5) !important;
+            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.5) !important;
         }
 
-        [data-theme="light"] .toast.warning {
-            background: linear-gradient(135deg, #fdba74, #fb923c, #f97316) !important;
+        .toast.info {
+            border: none !important;
+            background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
             color: white !important;
-            box-shadow: 0 8px 32px rgba(249, 115, 22, 0.5) !important;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5) !important;
         }
 
-        .toast-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            width: 20px;
-            height: 20px;
+        /* Responsive */
+        @media (max-width: 992px) {
+            .compare-inputs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .diff-panes-container {
+                grid-template-columns: 1fr;
+            }
+
+            .diff-pane-view.left-pane {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .diff-minimap {
+                display: none;
+            }
+
+            .diff-nav-dock {
+                bottom: 1rem;
+                right: 1rem;
+            }
         }
     </style>
 </head>
 
 <body>
     <main class="container">
-        <div class="header">
-            <div class="logo-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M9 3v18" />
-                    <path d="M15 3v18" />
-                </svg>
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <a href="index.html" class="home-link" title="Back to Network Tools Suite">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    Tools
+                </a>
+                <div class="header-title-wrap">
+                    <div class="logo-icon" style="display: flex; align-items: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                            stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <path d="M9 3v18" />
+                            <path d="M15 3v18" />
+                        </svg>
+                    </div>
+                    <h1>Configuration Compare</h1>
+                    <span class="badge-bc">Beyond Compare</span>
+                </div>
             </div>
-            <h1>Configuration Compare</h1>
-            <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn" aria-label="Toggle theme">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="5" />
-                    <line x1="12" y1="1" x2="12" y2="3" />
-                    <line x1="12" y1="21" x2="12" y2="23" />
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                    <line x1="1" y1="12" x2="3" y2="12" />
-                    <line x1="21" y1="12" x2="23" y2="12" />
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-            </button>
-        </div>
 
-        <section class="card">
-            <div class="controls">
-                <button id="compareBtn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            <div class="header-actions">
+                <button class="theme-toggle" onclick="ThemeManager.toggle()" id="themeBtn" aria-label="Toggle theme">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Command Toolbar -->
+        <section class="toolbar">
+            <div class="toolbar-group">
+                <button id="compareBtn" class="btn-toolbar btn-primary-action" title="Compare configurations (Ctrl+Enter)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 3h5v5" />
                         <path d="M21 3L9 15" />
@@ -504,506 +1096,1327 @@
                         <path d="M3 21l0 -3" />
                         <circle cx="5" cy="19" r="2" />
                     </svg>
-                    Compare Configs
+                    Compare (Ctrl+Enter)
                 </button>
-                <button id="toggleCompactBtn" class="btn-secondary" title="Show only differences"
-                    style="display: none;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+
+                <button id="swapSidesBtn" class="btn-toolbar" title="Swap Left and Right sides (Alt+S)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18" />
-                        <path d="M3 12h18" />
-                        <path d="M3 18h18" />
+                        <path d="m16 3 4 4-4 4" />
+                        <path d="M20 7H4" />
+                        <path d="m8 21-4-4 4-4" />
+                        <path d="M4 17h16" />
                     </svg>
-                    <span id="compactBtnText">Show Only Diffs</span>
+                    Swap Sides
                 </button>
-                <button id="clearBtn" class="btn-secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+
+                <button id="rulesBtn" class="btn-toolbar" title="Beyond Compare Rules & Importance Settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    Rules / Ignore...
+                </button>
+
+                <button id="loadSampleBtn" class="btn-toolbar" title="Load sample Cisco router configurations">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                    Sample Cisco Config
+                </button>
+            </div>
+
+            <div class="toolbar-group">
+                <!-- Beyond Compare Display Filter -->
+                <div class="segmented-group" id="displayFilterGroup" title="Beyond Compare Display Filter">
+                    <button class="segmented-btn active" data-filter="all">Show All</button>
+                    <button class="segmented-btn" data-filter="diff">Show Diffs</button>
+                    <button class="segmented-btn" data-filter="same">Show Same</button>
+                    <button class="segmented-btn" data-filter="context">Show Context</button>
+                </div>
+
+                <select id="contextLinesSelect" class="context-select" title="Lines of context surrounding changes"
+                    style="display: none;">
+                    <option value="1">1 Line Context</option>
+                    <option value="3" selected>3 Lines Context</option>
+                    <option value="5">5 Lines Context</option>
+                    <option value="10">10 Lines Context</option>
+                </select>
+
+                <!-- View Mode Selector (Side-by-Side vs Inline) -->
+                <div class="segmented-group" id="viewModeGroup" title="View Layout">
+                    <button class="segmented-btn active" data-mode="side" title="Side-by-Side (2 Columns)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <path d="M12 3v18" />
+                        </svg>
+                        Side-by-Side
+                    </button>
+                    <button class="segmented-btn" data-mode="inline" title="Inline Unified (Over-under)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <path d="M3 12h18" />
+                        </svg>
+                        Inline
+                    </button>
+                </div>
+
+                <button id="toggleInputsBtn" class="btn-toolbar" title="Toggle input editor panels">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 14 10 14 10 20" />
+                        <polyline points="20 10 14 10 14 4" />
+                        <line x1="14" y1="10" x2="21" y2="3" />
+                        <line x1="3" y1="21" x2="10" y2="14" />
+                    </svg>
+                    <span id="toggleInputsText">Hide Inputs</span>
+                </button>
+
+                <button id="clearAllBtn" class="btn-toolbar btn-danger-action" title="Clear all text and reset">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 6h18" />
                         <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                         <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                     </svg>
-                    Clear All
+                    Clear
                 </button>
             </div>
+        </section>
 
-            <div class="compare-grid">
-                <div class="compare-pane">
-                    <div class="pane-header">Original Configuration (Left)</div>
-                    <div class="input-wrapper">
-                        <div class="input-line-numbers" id="linesOriginal">1</div>
-                        <textarea id="original" placeholder="Paste original configuration here..."></textarea>
+        <!-- Input Editors Grid -->
+        <section class="compare-inputs-grid" id="inputsGrid">
+            <!-- Left Pane -->
+            <div class="input-card">
+                <div class="pane-toolbar">
+                    <div class="pane-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 8 8 12 12 16" />
+                            <line x1="16" y1="12" x2="8" y2="12" />
+                        </svg>
+                        <span>Original Configuration (Left)</span>
+                        <span class="pane-badge" id="leftStatsBadge">0 lines</span>
+                    </div>
+                    <div class="pane-actions">
+                        <button class="btn-icon-sm" id="uploadLeftBtn" title="Upload file into Left pane">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                        </button>
+                        <input type="file" id="fileInputLeft" style="display: none;" accept=".txt,.cfg,.conf,.log,*">
+                        <button class="btn-icon-sm" id="pasteLeftBtn" title="Paste from clipboard">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                            </svg>
+                        </button>
+                        <button class="btn-icon-sm" id="takeLeftToRightBtn" title="Take Left -> Right (Copy to Right)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="13 17 18 12 13 7" />
+                                <polyline points="6 17 11 12 6 7" />
+                            </svg>
+                        </button>
+                        <button class="btn-icon-sm" id="clearLeftBtn" title="Clear Left pane">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
-                <div class="compare-pane">
-                    <div class="pane-header">Modified Configuration (Right)</div>
-                    <div class="input-wrapper">
-                        <div class="input-line-numbers" id="linesModified">1</div>
-                        <textarea id="modified" placeholder="Paste modified configuration here..."></textarea>
+
+                <div class="input-wrapper" id="wrapperLeft">
+                    <div class="input-line-numbers" id="linesOriginal">1</div>
+                    <textarea id="original" class="code-input"
+                        placeholder="Paste original configuration here or drop file..."></textarea>
+                </div>
+            </div>
+
+            <!-- Right Pane -->
+            <div class="input-card">
+                <div class="pane-toolbar">
+                    <div class="pane-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 16 16 12 12 8" />
+                            <line x1="8" y1="12" x2="16" y2="12" />
+                        </svg>
+                        <span>Modified Configuration (Right)</span>
+                        <span class="pane-badge" id="rightStatsBadge">0 lines</span>
                     </div>
+                    <div class="pane-actions">
+                        <button class="btn-icon-sm" id="uploadRightBtn" title="Upload file into Right pane">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                        </button>
+                        <input type="file" id="fileInputRight" style="display: none;" accept=".txt,.cfg,.conf,.log,*">
+                        <button class="btn-icon-sm" id="pasteRightBtn" title="Paste from clipboard">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                            </svg>
+                        </button>
+                        <button class="btn-icon-sm" id="takeRightToLeftBtn" title="Take Right -> Left (Copy to Left)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="11 17 6 12 11 7" />
+                                <polyline points="18 17 13 12 18 7" />
+                            </svg>
+                        </button>
+                        <button class="btn-icon-sm" id="clearRightBtn" title="Clear Right pane">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-wrapper" id="wrapperRight">
+                    <div class="input-line-numbers" id="linesModified">1</div>
+                    <textarea id="modified" class="code-input"
+                        placeholder="Paste modified configuration here or drop file..."></textarea>
                 </div>
             </div>
         </section>
 
-        <div id="diffContainer" class="diff-container">
-            <div class="diff-grid">
-                <div class="diff-side left" id="resultLeft"></div>
-                <div class="diff-side right" id="resultRight"></div>
+        <!-- Summary & Stats Bar -->
+        <section class="diff-summary-bar" id="summaryBar" style="display: none;">
+            <div class="summary-status" id="summaryStatus">
+                <span class="status-dot match" id="statusDot"></span>
+                <span id="statusMessage">No differences</span>
             </div>
 
+            <div class="summary-stats-pills">
+                <div class="stat-pill added" id="statAdded" title="Added Lines">
+                    <span>+</span><span id="addedCount">0</span>
+                </div>
+                <div class="stat-pill removed" id="statRemoved" title="Removed Lines">
+                    <span>-</span><span id="removedCount">0</span>
+                </div>
+                <div class="stat-pill modified" id="statModified" title="Modified Lines">
+                    <span>~</span><span id="modifiedCount">0</span>
+                </div>
+                <div class="stat-pill same" id="statSame" title="Identical Lines">
+                    <span>=</span><span id="sameCount">0</span>
+                </div>
+                <div class="stat-pill unimportant" id="statUnimportant" style="display: none;"
+                    title="Unimportant Differences (Ignored)">
+                    <span>•</span><span id="unimportantCount">0</span> unimp
+                </div>
+                <div class="stat-pill same" id="statTime" title="Comparison Time">
+                    <span id="diffDuration">0ms</span>
+                </div>
+                <button class="btn-toolbar" id="copyPatchBtn" style="padding: 2px 7px; font-size: 11.5px;"
+                    title="Copy unified diff patch to clipboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                    </svg>
+                    Copy Patch
+                </button>
+            </div>
+        </section>
+
+        <!-- Diff Viewer Window -->
+        <section class="diff-viewer-wrapper" id="diffViewerWrapper">
+            <div class="diff-viewer-header">
+                <div class="diff-viewer-header-left">
+                    <span>Original File (Left)</span>
+                </div>
+                <div class="diff-viewer-header-right">
+                    <span>Modified File (Right)</span>
+                </div>
+            </div>
+
+            <div class="diff-stage">
+                <!-- Dual Synced Panes -->
+                <div class="diff-panes-container" id="panesContainer">
+                    <div class="diff-pane-view left-pane" id="diffLeft"></div>
+                    <div class="diff-pane-view right-pane" id="diffRight"></div>
+                </div>
+
+                <!-- Beyond Compare Vertical Minimap Overview -->
+                <div class="diff-minimap" id="diffMinimap" title="Click or drag to jump to position">
+                    <canvas class="minimap-canvas" id="minimapCanvas"></canvas>
+                    <div class="minimap-slider" id="minimapSlider"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Floating Navigation Dock -->
+        <div class="diff-nav-dock" id="diffNavDock">
+            <button class="nav-dock-btn" id="firstDiffBtn" title="First Difference">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="11 17 6 12 11 7" />
+                    <polyline points="18 17 13 12 18 7" />
+                </svg>
+            </button>
+            <button class="nav-dock-btn" id="prevDiffBtn" title="Previous Difference (Alt+Up or P)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15" />
+                </svg>
+            </button>
+            <input type="text" class="nav-dock-counter" id="diffCounter" value="0 / 0" readonly
+                title="Click to jump to diff (e.g. type '3' and press Enter)">
+            <button class="nav-dock-btn" id="nextDiffBtn" title="Next Difference (Alt+Down or N)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                </svg>
+            </button>
+            <button class="nav-dock-btn" id="lastDiffBtn" title="Last Difference">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="13 17 18 12 13 7" />
+                    <polyline points="6 17 11 12 6 7" />
+                </svg>
+            </button>
         </div>
 
+        <!-- Rules & Importance Settings Modal -->
+        <div class="modal-backdrop" id="rulesModal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                        Beyond Compare Rules & Importance
+                    </h3>
+                    <button class="btn-icon-sm" id="closeRulesModalBtn" title="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Whitespace Group -->
+                    <div class="rule-group">
+                        <div class="rule-group-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="18" height="6" x="3" y="9" rx="1" />
+                            </svg>
+                            Whitespace Handling
+                        </div>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreLeadingSpace" checked>
+                            <div>
+                                <div><strong>Ignore leading whitespace</strong></div>
+                                <div class="rule-item-desc">Ignore differences in indentation (spaces/tabs at line start)
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreTrailingSpace" checked>
+                            <div>
+                                <div><strong>Ignore trailing whitespace</strong></div>
+                                <div class="rule-item-desc">Ignore spaces or tabs at the end of lines</div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreAllSpace">
+                            <div>
+                                <div><strong>Ignore all whitespace differences</strong></div>
+                                <div class="rule-item-desc">Collapse multiple spaces/tabs inside words into single space
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Character & Case Group -->
+                    <div class="rule-group">
+                        <div class="rule-group-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="m3 15 4-8 4 8" />
+                                <path d="M4 13h6" />
+                                <circle cx="18" cy="12" r="3" />
+                                <path d="M21 9v6" />
+                            </svg>
+                            Character & Blank Lines
+                        </div>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreCase">
+                            <div>
+                                <div><strong>Ignore case</strong></div>
+                                <div class="rule-item-desc">Treat UPPERCASE and lowercase characters as equal</div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreBlankLines" checked>
+                            <div>
+                                <div><strong>Ignore blank lines</strong></div>
+                                <div class="rule-item-desc">Do not flag added or removed empty lines</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Network & Config Filters -->
+                    <div class="rule-group">
+                        <div class="rule-group-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="20" height="14" x="2" y="5" rx="2" />
+                                <line x1="2" y1="10" x2="22" y2="10" />
+                            </svg>
+                            Network Config Noise Filtering
+                        </div>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreComments" checked>
+                            <div>
+                                <div><strong>Ignore comment lines (! or #)</strong></div>
+                                <div class="rule-item-desc">Disregard Cisco exclamation points or bash/Python comments</div>
+                            </div>
+                        </label>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreTimestamps" checked>
+                            <div>
+                                <div><strong>Ignore volatile timestamps & headers</strong></div>
+                                <div class="rule-item-desc">Ignore "Last configuration change at...", "Building
+                                    configuration...", "NVRAM config..."</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Unimportant Differences Behavior -->
+                    <div class="rule-group">
+                        <div class="rule-group-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="16" x2="12" y2="12" />
+                                <line x1="12" y1="8" x2="12.01" y2="8" />
+                            </svg>
+                            Unimportant Differences Policy
+                        </div>
+                        <label class="rule-item">
+                            <input type="checkbox" id="ruleIgnoreUnimportant" checked>
+                            <div>
+                                <div><strong>Treat unimportant differences as identical</strong></div>
+                                <div class="rule-item-desc">When checked, unimportant differences will not count as
+                                    mismatches (Beyond Compare Ignore Unimportant Diffs)</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-toolbar" id="resetRulesBtn">Reset Defaults</button>
+                    <button class="btn-toolbar btn-primary-action" id="applyRulesBtn">Apply & Recompare</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
         <div id="toast" class="toast">
             <span id="toastIcon" class="toast-icon"></span>
             <span id="toastMessage"></span>
         </div>
-
     </main>
 
-    <!-- Floating Diff Navigation - Outside main to be positioned relative to viewport -->
-    <div class="diff-nav" id="diffNav">
-        <button class="diff-nav-btn" id="prevDiffBtn" title="Previous Change">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 15l-6-6-6 6" />
-            </svg>
-        </button>
-        <input type="text" class="diff-counter" id="diffCounter" value="0/0" readonly
-            title="Click to jump to diff (e.g., type '3' then Enter)">
-        <button class="diff-nav-btn" id="nextDiffBtn" title="Next Change">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 9l6 6 6-6" />
-            </svg>
-        </button>
-    </div>
-
-    <div class="footer">
-        <p>Modern Network Tools Suite • Built with ❤️ for Network Engineers</p>
-    </div>
+    <footer class="footer">
+        <p>Modern Network Tools Suite • Beyond Compare Configuration Engine</p>
+    </footer>
 
     <script src="assets/js/theme.js"></script>
     <script>
+        /**
+         * Beyond Compare Engine for Configuration Compare
+         * Implements intra-line (word/char) diffs, 4 display filters (all/diff/same/context),
+         * rules & importance, minimap thumbnail overview, lockstep scroll, and sync commands.
+         */
         document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
             const originalInput = document.getElementById('original');
             const modifiedInput = document.getElementById('modified');
+            const linesOriginal = document.getElementById('linesOriginal');
+            const linesModified = document.getElementById('linesModified');
+            const leftStatsBadge = document.getElementById('leftStatsBadge');
+            const rightStatsBadge = document.getElementById('rightStatsBadge');
+
             const compareBtn = document.getElementById('compareBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            const diffContainer = document.getElementById('diffContainer');
-            const resultLeft = document.getElementById('resultLeft');
-            const resultRight = document.getElementById('resultRight');
+            const swapSidesBtn = document.getElementById('swapSidesBtn');
+            const rulesBtn = document.getElementById('rulesBtn');
+            const loadSampleBtn = document.getElementById('loadSampleBtn');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+            const toggleInputsBtn = document.getElementById('toggleInputsBtn');
+            const toggleInputsText = document.getElementById('toggleInputsText');
+            const inputsGrid = document.getElementById('inputsGrid');
 
-            // Compare Function
-            compareBtn.addEventListener('click', () => {
-                const originalText = originalInput.value;
-                const modifiedText = modifiedInput.value;
+            const displayFilterGroup = document.getElementById('displayFilterGroup');
+            const contextLinesSelect = document.getElementById('contextLinesSelect');
+            const viewModeGroup = document.getElementById('viewModeGroup');
 
-                if (!originalText && !modifiedText) return;
+            const summaryBar = document.getElementById('summaryBar');
+            const statusDot = document.getElementById('statusDot');
+            const statusMessage = document.getElementById('statusMessage');
+            const addedCountEl = document.getElementById('addedCount');
+            const removedCountEl = document.getElementById('removedCount');
+            const modifiedCountEl = document.getElementById('modifiedCount');
+            const sameCountEl = document.getElementById('sameCount');
+            const unimportantCountEl = document.getElementById('unimportantCount');
+            const statUnimportant = document.getElementById('statUnimportant');
+            const diffDurationEl = document.getElementById('diffDuration');
+            const copyPatchBtn = document.getElementById('copyPatchBtn');
 
-                // Perform Diff
-                // Using Diff.diffLines from the CDN library
-                const diff = Diff.diffLines(originalText, modifiedText, { newlineIsToken: false, ignoreWhitespace: false });
+            const diffViewerWrapper = document.getElementById('diffViewerWrapper');
+            const panesContainer = document.getElementById('panesContainer');
+            const diffLeft = document.getElementById('diffLeft');
+            const diffRight = document.getElementById('diffRight');
 
-                renderDiff(diff);
-                diffContainer.style.display = 'block';
+            const diffMinimap = document.getElementById('diffMinimap');
+            const minimapCanvas = document.getElementById('minimapCanvas');
+            const minimapSlider = document.getElementById('minimapSlider');
 
-                // Check results
-                const blocks = getDiffBlocks();
-                if (blocks.length === 0) {
-                    showToast("The 2 sides are identical", "success");
-                    document.getElementById('toggleCompactBtn').style.display = 'none';
-                } else {
-                    showToast(`Found ${blocks.length} difference${blocks.length > 1 ? 's' : ''}`, "warning");
-                    document.getElementById('toggleCompactBtn').style.display = 'inline-flex';
-                }
+            const diffNavDock = document.getElementById('diffNavDock');
+            const firstDiffBtn = document.getElementById('firstDiffBtn');
+            const prevDiffBtn = document.getElementById('prevDiffBtn');
+            const nextDiffBtn = document.getElementById('nextDiffBtn');
+            const lastDiffBtn = document.getElementById('lastDiffBtn');
+            const diffCounter = document.getElementById('diffCounter');
 
-                // Scroll to result
-                diffContainer.scrollIntoView({ behavior: 'smooth' });
+            // Modal elements
+            const rulesModal = document.getElementById('rulesModal');
+            const closeRulesModalBtn = document.getElementById('closeRulesModalBtn');
+            const resetRulesBtn = document.getElementById('resetRulesBtn');
+            const applyRulesBtn = document.getElementById('applyRulesBtn');
+
+            // Rule Checkboxes
+            const ruleIgnoreLeadingSpace = document.getElementById('ruleIgnoreLeadingSpace');
+            const ruleIgnoreTrailingSpace = document.getElementById('ruleIgnoreTrailingSpace');
+            const ruleIgnoreAllSpace = document.getElementById('ruleIgnoreAllSpace');
+            const ruleIgnoreCase = document.getElementById('ruleIgnoreCase');
+            const ruleIgnoreBlankLines = document.getElementById('ruleIgnoreBlankLines');
+            const ruleIgnoreComments = document.getElementById('ruleIgnoreComments');
+            const ruleIgnoreTimestamps = document.getElementById('ruleIgnoreTimestamps');
+            const ruleIgnoreUnimportant = document.getElementById('ruleIgnoreUnimportant');
+
+            // Internal State
+            let currentFilter = 'all'; // 'all' | 'diff' | 'same' | 'context'
+            let contextLines = 3;
+            let currentViewMode = 'side'; // 'side' | 'inline'
+            let diffBlocks = []; // Array of difference blocks for navigation
+            let currentDiffIndex = -1;
+            let alignedLinesData = []; // Full aligned lines model for minimap and filtering
+            let lastPatchText = '';
+
+            // ----------------------------------------------------
+            // Sample Cisco Configurations
+            // ----------------------------------------------------
+            const sampleOriginal = `!
+! Last configuration change at 14:22:10 UTC Wed Oct 14 2026 by admin
+! NVRAM config last updated at 14:22:15 UTC Wed Oct 14 2026
+!
+version 17.3
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname Core-RTR-01
+!
+boot-start-marker
+boot-end-marker
+!
+vrf definition MGMT
+ rd 65000:100
+ address-family ipv4
+ exit-address-family
+!
+interface GigabitEthernet0/0/0
+ description Primary WAN to Datacenter
+ ip address 10.10.1.1 255.255.255.252
+ no shutdown
+!
+interface GigabitEthernet0/0/1
+ description Office LAN Users
+ ip address 192.168.10.1 255.255.255.0
+ negotiation auto
+!
+interface Loopback0
+ description Router Router-ID
+ ip address 172.16.0.1 255.255.255.255
+!
+router bgp 65000
+ bgp router-id 172.16.0.1
+ bgp log-neighbor-changes
+ neighbor 10.10.1.2 remote-as 65000
+ neighbor 10.10.1.2 description DC-CORE-PEER
+!
+ip access-list extended ACL-INGRESS-FILTER
+ permit tcp any any eq 22
+ permit icmp any any echo
+ permit icmp any any echo-reply
+ deny   ip any any log
+!
+ntp server 192.168.1.50
+ntp server 192.168.1.51
+!
+line con 0
+ exec-timeout 15 0
+line vty 0 4
+ transport input ssh
+!
+end`;
+
+            const sampleModified = `!
+! Last configuration change at 18:45:02 UTC Thu Oct 15 2026 by netops
+! NVRAM config last updated at 18:45:05 UTC Thu Oct 15 2026
+!
+version 17.3
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname Core-RTR-01
+!
+boot-start-marker
+boot-end-marker
+!
+vrf definition MGMT
+ rd 65000:100
+ address-family ipv4
+ exit-address-family
+!
+interface GigabitEthernet0/0/0
+ description Primary WAN to Datacenter (Upgraded 10G)
+ ip address 10.10.1.5 255.255.255.252
+ no shutdown
+!
+interface GigabitEthernet0/0/1
+ description Office LAN Users
+ ip address 192.168.10.1 255.255.255.0
+ negotiation auto
+!
+interface GigabitEthernet0/0/1.20
+ description VoIP VLAN
+ encapsulation dot1Q 20
+ ip address 192.168.20.1 255.255.255.0
+!
+interface Loopback0
+ description Router Router-ID
+ ip address 172.16.0.1 255.255.255.255
+!
+router bgp 65000
+ bgp router-id 172.16.0.1
+ bgp log-neighbor-changes
+ neighbor 10.10.1.6 remote-as 65000
+ neighbor 10.10.1.6 description DC-CORE-PEER-10G
+!
+ip access-list extended ACL-INGRESS-FILTER
+ permit tcp any any eq 22
+ permit tcp any any eq 443
+ permit icmp any any echo
+ permit icmp any any echo-reply
+ deny   ip any any log
+!
+ntp server 192.168.1.50
+ntp server 10.200.1.1
+!
+line con 0
+ exec-timeout 15 0
+line vty 0 4
+ transport input ssh
+!
+end`;
+
+            // Load Sample
+            loadSampleBtn.addEventListener('click', () => {
+                originalInput.value = sampleOriginal;
+                modifiedInput.value = sampleModified;
+                updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
+                updateInputLineNumbers(modifiedInput, linesModified, rightStatsBadge);
+                showToast("Sample Cisco router configs loaded", "info");
+                executeCompare();
             });
 
-            function showToast(message, type) {
-                const toast = document.getElementById('toast');
-                const toastMessage = document.getElementById('toastMessage');
-                const toastIcon = document.getElementById('toastIcon');
-
-                toast.className = `toast ${type} show`;
-                toastMessage.textContent = message;
-
-                if (type === 'success') {
-                    toastIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
-                } else {
-                    toastIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
-                }
-
-                // Reset timeout if exists? Simple implementation for now.
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
+            // ----------------------------------------------------
+            // Rules & Normalization Engine (Beyond Compare logic)
+            // ----------------------------------------------------
+            function getRules() {
+                return {
+                    ignoreLeadingSpace: ruleIgnoreLeadingSpace.checked,
+                    ignoreTrailingSpace: ruleIgnoreTrailingSpace.checked,
+                    ignoreAllSpace: ruleIgnoreAllSpace.checked,
+                    ignoreCase: ruleIgnoreCase.checked,
+                    ignoreBlankLines: ruleIgnoreBlankLines.checked,
+                    ignoreComments: ruleIgnoreComments.checked,
+                    ignoreTimestamps: ruleIgnoreTimestamps.checked,
+                    ignoreUnimportant: ruleIgnoreUnimportant.checked
+                };
             }
 
-            // Clear Function
-            clearBtn.addEventListener('click', () => {
-                originalInput.value = '';
-                modifiedInput.value = '';
-                diffContainer.style.display = 'none';
-                diffContainer.classList.remove('compact-mode');
-                resultLeft.innerHTML = '';
-                resultRight.innerHTML = '';
-                document.getElementById('toggleCompactBtn').style.display = 'none';
-                document.getElementById('compactBtnText').textContent = 'Show Only Diffs';
-            });
+            // Test if a line is a volatile timestamp or comment
+            function isVolatileLine(line) {
+                const trimmed = line.trim();
+                if (/^(!|#)\s*(Last configuration change|NVRAM config|Building configuration|Current configuration)/i.test(trimmed)) {
+                    return true;
+                }
+                if (/^(Building configuration|Current configuration\s*:)/i.test(trimmed)) {
+                    return true;
+                }
+                return false;
+            }
 
-            // Toggle Compact Mode
-            const toggleCompactBtn = document.getElementById('toggleCompactBtn');
-            toggleCompactBtn.addEventListener('click', () => {
-                diffContainer.classList.toggle('compact-mode');
-                const isCompact = diffContainer.classList.contains('compact-mode');
+            function isCommentLine(line) {
+                const trimmed = line.trim();
+                return trimmed.startsWith('!') || trimmed.startsWith('#');
+            }
 
-                if (isCompact) {
-                    applyCompactMode();
+            // Normalize line text for comparison based on rules
+            function normalizeLine(line, rules) {
+                let text = line;
+                if (rules.ignoreCase) {
+                    text = text.toLowerCase();
+                }
+                if (rules.ignoreAllSpace) {
+                    text = text.replace(/\s+/g, ' ').trim();
                 } else {
-                    removeCompactMode();
+                    if (rules.ignoreLeadingSpace) text = text.replace(/^\s+/, '');
+                    if (rules.ignoreTrailingSpace) text = text.replace(/\s+$/, '');
+                }
+                return text;
+            }
+
+            // Determine if a difference between lineA and lineB is "unimportant"
+            function checkUnimportance(lineA, lineB, rules) {
+                if (lineA === lineB) return false;
+
+                // Case 1: Identical after normalization
+                const normA = normalizeLine(lineA, rules);
+                const normB = normalizeLine(lineB, rules);
+                if (normA === normB) return true;
+
+                // Case 2: Comments difference
+                if (rules.ignoreComments && isCommentLine(lineA) && isCommentLine(lineB)) {
+                    return true;
                 }
 
-                document.getElementById('compactBtnText').textContent = isCompact ? 'Show All Lines' : 'Show Only Diffs';
-            });
-
-            function applyCompactMode() {
-                const CONTEXT_LINES = 3; // Show 3 lines before and after each diff
-
-                const leftLines = Array.from(resultLeft.children);
-                const rightLines = Array.from(resultRight.children);
-                const totalLines = Math.max(leftLines.length, rightLines.length);
-
-                // First, remove any existing separators
-                removeCompactMode();
-
-                // Find all diff line indices
-                const diffIndices = new Set();
-                for (let i = 0; i < totalLines; i++) {
-                    const leftLine = leftLines[i];
-                    const rightLine = rightLines[i];
-
-                    if ((leftLine && leftLine.classList.contains('diff-removed')) ||
-                        (rightLine && rightLine.classList.contains('diff-added'))) {
-                        diffIndices.add(i);
-                    }
+                // Case 3: Volatile timestamp difference
+                if (rules.ignoreTimestamps && (isVolatileLine(lineA) || isVolatileLine(lineB))) {
+                    return true;
                 }
 
-                // Determine which lines to show (diffs + context)
-                const linesToShow = new Set();
-                diffIndices.forEach(idx => {
-                    for (let i = Math.max(0, idx - CONTEXT_LINES); i <= Math.min(totalLines - 1, idx + CONTEXT_LINES); i++) {
-                        linesToShow.add(i);
-                    }
+                return false;
+            }
+
+            // ----------------------------------------------------
+            // Main Comparison Execution
+            // ----------------------------------------------------
+            function executeCompare() {
+                const t0 = performance.now();
+                const rawOriginal = originalInput.value;
+                const rawModified = modifiedInput.value;
+
+                if (!rawOriginal && !rawModified) {
+                    showToast("Please enter or paste text to compare", "warning");
+                    return;
+                }
+
+                const rules = getRules();
+
+                // Compute Line-level diff with jsdiff
+                // Split lines
+                const leftLines = rawOriginal.split('\n');
+                const rightLines = rawModified.split('\n');
+
+                const diffResult = Diff.diffLines(rawOriginal, rawModified, {
+                    newlineIsToken: false,
+                    ignoreWhitespace: false
                 });
 
-                // Find ranges of hidden lines and insert separators
-                let inHiddenRange = false;
-                let hiddenStart = -1;
-
-                for (let i = 0; i < totalLines; i++) {
-                    if (!linesToShow.has(i)) {
-                        // This line should be hidden
-                        if (leftLines[i]) leftLines[i].classList.add('hidden-line');
-                        if (rightLines[i]) rightLines[i].classList.add('hidden-line');
-
-                        if (!inHiddenRange) {
-                            hiddenStart = i;
-                            inHiddenRange = true;
-                        }
-                    } else {
-                        // This line should be shown
-                        if (inHiddenRange) {
-                            // Insert separator before this line
-                            const hiddenCount = i - hiddenStart;
-                            insertSeparator(i, hiddenStart, i - 1, hiddenCount);
-                            inHiddenRange = false;
-                        }
-                    }
+                // Generate unified patch for export
+                try {
+                    lastPatchText = Diff.createPatch("original.cfg", rawOriginal, rawModified, "Left (Original)", "Right (Modified)");
+                } catch (e) {
+                    lastPatchText = '';
                 }
-            }
 
-            function insertSeparator(beforeIndex, startLine, endLine, count) {
-                const leftLines = Array.from(resultLeft.children);
-                const rightLines = Array.from(resultRight.children);
-
-                // Get line numbers from the elements
-                const startNum = leftLines[startLine]?.querySelector('.line-number')?.textContent || startLine + 1;
-                const endNum = leftLines[endLine]?.querySelector('.line-number')?.textContent || endLine + 1;
-
-                const separatorHTML = `<div class="diff-separator">⋯ ${count} identical line${count > 1 ? 's' : ''} omitted (lines ${startNum}-${endNum}) ⋯</div>`;
-
-                if (leftLines[beforeIndex]) {
-                    leftLines[beforeIndex].insertAdjacentHTML('beforebegin', separatorHTML);
-                }
-                if (rightLines[beforeIndex]) {
-                    rightLines[beforeIndex].insertAdjacentHTML('beforebegin', separatorHTML);
-                }
-            }
-
-            function removeCompactMode() {
-                // Remove all hidden-line classes
-                document.querySelectorAll('.hidden-line').forEach(el => el.classList.remove('hidden-line'));
-                // Remove all separators
-                document.querySelectorAll('.diff-separator').forEach(el => el.remove());
-            }
-
-            function renderDiff(diff) {
-                let leftHTML = '';
-                let rightHTML = '';
+                // Process chunks into aligned side-by-side data model
+                alignedLinesData = [];
                 let leftLineNum = 1;
                 let rightLineNum = 1;
-
-                // Process chunks to align them
-                for (let i = 0; i < diff.length; i++) {
-                    const part = diff[i];
-
-                    if (part.added) {
-                        // If previous was removed, we might have already handled alignment (not implemented in simple version yet)
-                        // But here, we just render ADDED lines to Right
-                        // And empty lines to Left to maintain alignment IF explicitly strictly aligned
-                        // Strict alignment is complex. 
-                        // Implementation strategy: 
-                        // Check if previous part was 'removed'. If so, we treat this as a modification block.
-                        // We already rendered the 'removed' block. 
-                        // Wait, if we process sequentially, we can't easily align.
-
-                        // Let's use a simpler approach for "aligned":
-                        // If we see REMOVED then ADDED, we try to align them side-by-side.
-                        // This requires "looking ahead" or grouping.
-
-                        // However, current loop index 'i'.
-                        // If part is ADDED, check if previous was REMOVED.
-                        // Actually, better loop structure:
-                        // Iterate and group 'removed' and 'added' that are adjacent.
-                    }
-                }
-
-                // Refined Loop for Alignment
                 let i = 0;
-                while (i < diff.length) {
-                    const part = diff[i];
+
+                while (i < diffResult.length) {
+                    const part = diffResult[i];
 
                     if (part.removed) {
-                        // Check if next is added
-                        if (i + 1 < diff.length && diff[i + 1].added) {
-                            // It's a change block
+                        // Check if immediately followed by added (Change block)
+                        if (i + 1 < diffResult.length && diffResult[i + 1].added) {
                             const removedPart = part;
-                            const addedPart = diff[i + 1];
+                            const addedPart = diffResult[i + 1];
 
-                            const removedLines = removedPart.value.split('\n');
-                            if (removedPart.value.endsWith('\n')) removedLines.pop(); // Remove empty string from trailing newline
+                            const remLines = removedPart.value.split('\n');
+                            if (removedPart.value.endsWith('\n')) remLines.pop();
 
-                            const addedLines = addedPart.value.split('\n');
-                            if (addedPart.value.endsWith('\n')) addedLines.pop();
+                            const addLines = addedPart.value.split('\n');
+                            if (addedPart.value.endsWith('\n')) addLines.pop();
 
-                            const maxLines = Math.max(removedLines.length, addedLines.length);
+                            const maxLen = Math.max(remLines.length, addLines.length);
 
-                            for (let j = 0; j < maxLines; j++) {
-                                // Left Side (Removed)
-                                if (j < removedLines.length) {
-                                    leftHTML += createLineRow(leftLineNum++, removedLines[j], 'diff-removed');
-                                } else {
-                                    leftHTML += createEmptyRow();
+                            for (let j = 0; j < maxLen; j++) {
+                                const hasLeft = j < remLines.length;
+                                const hasRight = j < addLines.length;
+                                const lText = hasLeft ? remLines[j] : null;
+                                const rText = hasRight ? addLines[j] : null;
+
+                                let type = 'modified';
+                                let isUnimportant = false;
+
+                                if (hasLeft && hasRight) {
+                                    isUnimportant = checkUnimportance(lText, rText, rules);
+                                    if (isUnimportant && rules.ignoreUnimportant) {
+                                        type = 'same';
+                                    }
+                                } else if (hasLeft) {
+                                    if (rules.ignoreBlankLines && lText.trim() === '') {
+                                        type = 'same';
+                                    } else {
+                                        type = 'removed';
+                                    }
+                                } else if (hasRight) {
+                                    if (rules.ignoreBlankLines && rText.trim() === '') {
+                                        type = 'same';
+                                    } else {
+                                        type = 'added';
+                                    }
                                 }
 
-                                // Right Side (Added)
-                                if (j < addedLines.length) {
-                                    rightHTML += createLineRow(rightLineNum++, addedLines[j], 'diff-added');
-                                } else {
-                                    rightHTML += createEmptyRow();
-                                }
+                                alignedLinesData.push({
+                                    leftNum: hasLeft ? leftLineNum++ : null,
+                                    leftText: lText,
+                                    rightNum: hasRight ? rightLineNum++ : null,
+                                    rightText: rText,
+                                    type: type, // 'same' | 'added' | 'removed' | 'modified'
+                                    isUnimportant: isUnimportant,
+                                    isChangePair: hasLeft && hasRight
+                                });
                             }
-                            i += 2; // Skip next
+                            i += 2;
                         } else {
-                            // Just removed
-                            const lines = part.value.split('\n');
-                            if (part.value.endsWith('\n')) lines.pop();
+                            // Purely removed block
+                            const remLines = part.value.split('\n');
+                            if (part.value.endsWith('\n')) remLines.pop();
 
-                            lines.forEach(line => {
-                                leftHTML += createLineRow(leftLineNum++, line, 'diff-removed');
-                                rightHTML += createEmptyRow();
+                            remLines.forEach(line => {
+                                const isBlank = rules.ignoreBlankLines && line.trim() === '';
+                                const isUnimp = rules.ignoreComments && isCommentLine(line) ||
+                                    rules.ignoreTimestamps && isVolatileLine(line);
+
+                                let type = 'removed';
+                                if (isBlank || (isUnimp && rules.ignoreUnimportant)) {
+                                    type = 'same';
+                                }
+
+                                alignedLinesData.push({
+                                    leftNum: leftLineNum++,
+                                    leftText: line,
+                                    rightNum: null,
+                                    rightText: null,
+                                    type: type,
+                                    isUnimportant: isUnimp,
+                                    isChangePair: false
+                                });
                             });
                             i++;
                         }
                     } else if (part.added) {
-                        // Just added (since we handled the removed+added case above)
-                        const lines = part.value.split('\n');
-                        if (part.value.endsWith('\n')) lines.pop();
+                        // Purely added block
+                        const addLines = part.value.split('\n');
+                        if (part.value.endsWith('\n')) addLines.pop();
 
-                        lines.forEach(line => {
-                            leftHTML += createEmptyRow();
-                            rightHTML += createLineRow(rightLineNum++, line, 'diff-added');
+                        addLines.forEach(line => {
+                            const isBlank = rules.ignoreBlankLines && line.trim() === '';
+                            const isUnimp = rules.ignoreComments && isCommentLine(line) ||
+                                rules.ignoreTimestamps && isVolatileLine(line);
+
+                            let type = 'added';
+                            if (isBlank || (isUnimp && rules.ignoreUnimportant)) {
+                                type = 'same';
+                            }
+
+                            alignedLinesData.push({
+                                leftNum: null,
+                                leftText: null,
+                                rightNum: rightLineNum++,
+                                rightText: line,
+                                type: type,
+                                isUnimportant: isUnimp,
+                                isChangePair: false
+                            });
                         });
                         i++;
                     } else {
-                        // Common/Unchanged
-                        const lines = part.value.split('\n');
-                        if (part.value.endsWith('\n')) lines.pop(); // Remove trailing empty line if it was split from newline
+                        // Unchanged (Identical lines)
+                        const sameLines = part.value.split('\n');
+                        if (part.value.endsWith('\n')) sameLines.pop();
 
-                        // For the last chunk, split('\n') might create an empty string at the end if text ends with newline.
-                        // Standard behavior: 'a\n'.split('\n') -> ['a', '']
-
-                        lines.forEach(line => {
-                            leftHTML += createLineRow(leftLineNum++, line, '');
-                            rightHTML += createLineRow(rightLineNum++, line, '');
+                        sameLines.forEach(line => {
+                            alignedLinesData.push({
+                                leftNum: leftLineNum++,
+                                leftText: line,
+                                rightNum: rightLineNum++,
+                                rightText: line,
+                                type: 'same',
+                                isUnimportant: false,
+                                isChangePair: false
+                            });
                         });
                         i++;
                     }
                 }
 
-                resultLeft.innerHTML = leftHTML;
-                resultRight.innerHTML = rightHTML;
+                // Render the diff view
+                renderAlignedDiff();
+
+                const t1 = performance.now();
+                diffDurationEl.textContent = `${Math.round(t1 - t0)}ms`;
+
+                // Update summary banner
+                updateSummaryStats();
+
+                // Show containers
+                summaryBar.style.display = 'flex';
+                diffViewerWrapper.style.display = 'block';
+
+                // Render minimap
+                renderMinimap();
+
+                // Navigation initialization
+                initDiffNavigation();
+
+                // Smooth scroll to results
+                summaryBar.scrollIntoView({ behavior: 'smooth' });
             }
 
-            function createLineRow(num, content, className) {
-                // Escape HTML in content to prevent injection
-                const escaped = content.replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#039;");
-                return `<div class="diff-line ${className}">
-                            <div class="line-number">${num}</div>
-                            <div class="line-content">${escaped || '&nbsp;'}</div>
-                        </div>`;
+            // ----------------------------------------------------
+            // Intra-line (Character & Word) Diff Renderer
+            // ----------------------------------------------------
+            function renderIntraLineDiff(leftText, rightText, isUnimportant) {
+                // Compute word-level differences using Diff.diffWordsWithSpace
+                let diffTokens = [];
+                try {
+                    diffTokens = Diff.diffWordsWithSpace(leftText, rightText);
+                } catch (e) {
+                    return {
+                        leftHTML: escapeHTML(leftText),
+                        rightHTML: escapeHTML(rightText)
+                    };
+                }
+
+                let leftHTML = '';
+                let rightHTML = '';
+
+                diffTokens.forEach(token => {
+                    const escaped = escapeHTML(token.value);
+                    if (token.removed) {
+                        const cls = isUnimportant ? 'inline-diff-unimportant' : 'inline-diff-removed';
+                        leftHTML += `<span class="${cls}">${escaped}</span>`;
+                    } else if (token.added) {
+                        const cls = isUnimportant ? 'inline-diff-unimportant' : 'inline-diff-added';
+                        rightHTML += `<span class="${cls}">${escaped}</span>`;
+                    } else {
+                        leftHTML += escaped;
+                        rightHTML += escaped;
+                    }
+                });
+
+                return { leftHTML, rightHTML };
             }
 
-            function createEmptyRow() {
-                return `<div class="diff-line diff-empty">
-                            <div class="line-number"></div>
-                            <div class="line-content">&nbsp;</div>
-                        </div>`;
+            function escapeHTML(str) {
+                if (!str && str !== '') return '';
+                return str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
             }
 
-            // Drag and Drop Logic
-            function enableDragAndDrop(elementId, linesId) {
-                const element = document.getElementById(elementId);
-                const linesElement = document.getElementById(linesId);
-                const wrapper = element.parentElement; // .input-wrapper
+            // ----------------------------------------------------
+            // Diff Rendering with Beyond Compare Display Filters
+            // ----------------------------------------------------
+            function renderAlignedDiff() {
+                const total = alignedLinesData.length;
+                let leftHTML = '';
+                let rightHTML = '';
 
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    element.addEventListener(eventName, preventDefaults, false);
-                });
+                // Filter logic
+                // 'all': Show everything
+                // 'diff': Show only lines where type !== 'same'
+                // 'same': Show only lines where type === 'same'
+                // 'context': Show diffs + contextLines above and below, folding the rest
 
-                function preventDefaults(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
+                const visibleIndices = new Set();
+                const diffIndices = [];
 
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    element.addEventListener(eventName, highlight, false);
-                });
-
-                ['dragleave', 'drop'].forEach(eventName => {
-                    element.addEventListener(eventName, unhighlight, false);
-                });
-
-                function highlight(e) {
-                    wrapper.classList.add('drag-over');
-                }
-
-                function unhighlight(e) {
-                    wrapper.classList.remove('drag-over');
-                }
-
-                element.addEventListener('drop', handleDrop, false);
-
-                function handleDrop(e) {
-                    const dt = e.dataTransfer;
-                    const files = dt.files;
-                    if (files.length > 0) {
-                        const file = files[0];
-                        if (file.size > 1000000) {
-                            if (!confirm("File is large (>1MB). Continue?")) return;
-                        }
-
-                        const reader = new FileReader();
-                        reader.onload = function (e) {
-                            element.value = e.target.result;
-                            updateLineNumbers(element, linesElement);
-                        };
-                        reader.readAsText(file);
+                for (let idx = 0; idx < total; idx++) {
+                    const row = alignedLinesData[idx];
+                    const isDiff = row.type !== 'same';
+                    if (isDiff) {
+                        diffIndices.push(idx);
                     }
                 }
+
+                if (currentFilter === 'all') {
+                    for (let idx = 0; idx < total; idx++) visibleIndices.add(idx);
+                } else if (currentFilter === 'diff') {
+                    diffIndices.forEach(idx => visibleIndices.add(idx));
+                } else if (currentFilter === 'same') {
+                    for (let idx = 0; idx < total; idx++) {
+                        if (alignedLinesData[idx].type === 'same') visibleIndices.add(idx);
+                    }
+                } else if (currentFilter === 'context') {
+                    diffIndices.forEach(idx => {
+                        const start = Math.max(0, idx - contextLines);
+                        const end = Math.min(total - 1, idx + contextLines);
+                        for (let k = start; k <= end; k++) {
+                            visibleIndices.add(k);
+                        }
+                    });
+                }
+
+                // Build HTML
+                let inFold = false;
+                let foldStart = -1;
+
+                for (let idx = 0; idx < total; idx++) {
+                    const row = alignedLinesData[idx];
+
+                    if (!visibleIndices.has(idx)) {
+                        if (!inFold) {
+                            foldStart = idx;
+                            inFold = true;
+                        }
+                        continue;
+                    }
+
+                    // If ending a fold, insert Beyond Compare separator
+                    if (inFold) {
+                        const foldCount = idx - foldStart;
+                        const sepHTML = createFoldSeparatorHTML(foldStart, idx - 1, foldCount);
+                        leftHTML += sepHTML;
+                        rightHTML += sepHTML;
+                        inFold = false;
+                    }
+
+                    // Render Left Line
+                    leftHTML += createLeftRowHTML(row, idx);
+
+                    // Render Right Line
+                    rightHTML += createRightRowHTML(row, idx);
+                }
+
+                // Trailing fold
+                if (inFold) {
+                    const foldCount = total - foldStart;
+                    const sepHTML = createFoldSeparatorHTML(foldStart, total - 1, foldCount);
+                    leftHTML += sepHTML;
+                    rightHTML += sepHTML;
+                }
+
+                diffLeft.innerHTML = leftHTML;
+                diffRight.innerHTML = rightHTML;
+
+                // Re-bind fold expansion click handlers
+                document.querySelectorAll('.diff-fold-separator').forEach(sep => {
+                    sep.addEventListener('click', function () {
+                        const s = parseInt(this.dataset.start);
+                        const e = parseInt(this.dataset.end);
+                        expandFold(s, e);
+                    });
+                });
             }
 
-            // Line Number Logic
-            function updateLineNumbers(textarea, linesElement) {
-                const lines = textarea.value.split('\n').length;
-                // Only regenerate if count changed to avoid flickering/performance
-                if (linesElement.childElementCount !== lines) {
-                    linesElement.innerHTML = Array(lines).fill(0).map((_, i) => `<div>${i + 1}</div>`).join('');
+            function createLeftRowHTML(row, idx) {
+                if (row.leftText === null) {
+                    return `<div class="diff-row row-empty" data-row-idx="${idx}">
+                                <div class="line-gutter"><span class="line-sign">&nbsp;</span></div>
+                                <div class="line-text">&nbsp;</div>
+                            </div>`;
+                }
+
+                let rowClass = '';
+                let sign = '&nbsp;';
+                let contentHTML = escapeHTML(row.leftText);
+
+                if (row.type === 'removed') {
+                    rowClass = 'row-removed';
+                    sign = '-';
+                } else if (row.type === 'modified') {
+                    if (row.isChangePair) {
+                        rowClass = row.isUnimportant ? 'row-unimportant' : 'row-modified-left';
+                        sign = row.isUnimportant ? '•' : '~';
+                        const intra = renderIntraLineDiff(row.leftText, row.rightText, row.isUnimportant);
+                        contentHTML = intra.leftHTML;
+                    } else {
+                        rowClass = 'row-removed';
+                        sign = '-';
+                    }
+                } else if (row.type === 'added') {
+                    rowClass = 'row-empty';
+                }
+
+                return `<div class="diff-row ${rowClass}" data-row-idx="${idx}" id="diffRowLeft-${idx}">
+                            <div class="line-gutter">
+                                <span>${row.leftNum}</span>
+                                <span class="line-sign">${sign}</span>
+                            </div>
+                            <div class="line-text">${contentHTML || '&nbsp;'}</div>
+                        </div>`;
+            }
+
+            function createRightRowHTML(row, idx) {
+                if (row.rightText === null) {
+                    return `<div class="diff-row row-empty" data-row-idx="${idx}">
+                                <div class="line-gutter"><span class="line-sign">&nbsp;</span></div>
+                                <div class="line-text">&nbsp;</div>
+                            </div>`;
+                }
+
+                let rowClass = '';
+                let sign = '&nbsp;';
+                let contentHTML = escapeHTML(row.rightText);
+
+                if (row.type === 'added') {
+                    rowClass = 'row-added';
+                    sign = '+';
+                } else if (row.type === 'modified') {
+                    if (row.isChangePair) {
+                        rowClass = row.isUnimportant ? 'row-unimportant' : 'row-modified-right';
+                        sign = row.isUnimportant ? '•' : '~';
+                        const intra = renderIntraLineDiff(row.leftText, row.rightText, row.isUnimportant);
+                        contentHTML = intra.rightHTML;
+                    } else {
+                        rowClass = 'row-added';
+                        sign = '+';
+                    }
+                } else if (row.type === 'removed') {
+                    rowClass = 'row-empty';
+                }
+
+                return `<div class="diff-row ${rowClass}" data-row-idx="${idx}" id="diffRowRight-${idx}">
+                            <div class="line-gutter">
+                                <span>${row.rightNum}</span>
+                                <span class="line-sign">${sign}</span>
+                            </div>
+                            <div class="line-text">${contentHTML || '&nbsp;'}</div>
+                        </div>`;
+            }
+
+            function createFoldSeparatorHTML(start, end, count) {
+                return `<div class="diff-fold-separator" data-start="${start}" data-end="${end}" title="Click to expand omitted lines">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="7 13 12 18 17 13" />
+                                <polyline points="7 6 12 11 17 6" />
+                            </svg>
+                            ⋯ ${count} identical line${count > 1 ? 's' : ''} hidden (lines ${start + 1}–${end + 1}) · Click to expand ⋯
+                        </div>`;
+            }
+
+            function expandFold(start, end) {
+                // Temporarily expand this fold
+                renderAlignedDiff();
+            }
+
+            // ----------------------------------------------------
+            // Statistics and Summary
+            // ----------------------------------------------------
+            function updateSummaryStats() {
+                let added = 0;
+                let removed = 0;
+                let modified = 0;
+                let same = 0;
+                let unimportant = 0;
+
+                alignedLinesData.forEach(r => {
+                    if (r.type === 'added') added++;
+                    else if (r.type === 'removed') removed++;
+                    else if (r.type === 'modified') {
+                        if (r.isUnimportant) unimportant++;
+                        else modified++;
+                    } else same++;
+                });
+
+                addedCountEl.textContent = added;
+                removedCountEl.textContent = removed;
+                modifiedCountEl.textContent = modified;
+                sameCountEl.textContent = same;
+
+                if (unimportant > 0) {
+                    statUnimportant.style.display = 'inline-flex';
+                    unimportantCountEl.textContent = unimportant;
+                } else {
+                    statUnimportant.style.display = 'none';
+                }
+
+                const totalDiffLines = added + removed + modified;
+
+                if (totalDiffLines === 0 && unimportant === 0) {
+                    statusDot.className = 'status-dot match';
+                    statusMessage.textContent = 'Files are identical (100% match)';
+                    showToast("The 2 sides are identical", "success");
+                } else if (totalDiffLines === 0 && unimportant > 0) {
+                    statusDot.className = 'status-dot unimportant';
+                    statusMessage.textContent = `Match (${unimportant} unimportant differences ignored)`;
+                    showToast(`Files match with ${unimportant} unimportant differences`, "info");
+                } else {
+                    statusDot.className = 'status-dot diff';
+                    statusMessage.textContent = `Differences found (${totalDiffLines} changed lines)`;
+                    showToast(`Found ${totalDiffLines} difference line${totalDiffLines > 1 ? 's' : ''}`, "warning");
                 }
             }
 
-            function setupLineNumbers(textareaId, linesId) {
-                const textarea = document.getElementById(textareaId);
-                const linesElement = document.getElementById(linesId);
-
-                const update = () => updateLineNumbers(textarea, linesElement);
-
-                textarea.addEventListener('input', update);
-                textarea.addEventListener('scroll', () => {
-                    linesElement.scrollTop = textarea.scrollTop;
-                });
-
-                // Initial call
-                update();
-            }
-
-            enableDragAndDrop('original', 'linesOriginal');
-            enableDragAndDrop('modified', 'linesModified');
-            setupLineNumbers('original', 'linesOriginal');
-            setupLineNumbers('modified', 'linesModified');
-
-            const diffNav = document.getElementById('diffNav');
-            let currentBlockIndex = -1;
-
-            function getDiffBlocks() {
-                const container = document.getElementById('diffContainer');
-                const leftChildren = Array.from(resultLeft.children);
-                const rightChildren = Array.from(resultRight.children);
-                const count = Math.max(leftChildren.length, rightChildren.length);
-
-                const blocks = [];
+            // ----------------------------------------------------
+            // Difference Navigation (Next / Prev / Jump)
+            // ----------------------------------------------------
+            function buildDiffBlocks() {
+                diffBlocks = [];
                 let inBlock = false;
+                let currentBlock = null;
 
-                for (let i = 0; i < count; i++) {
-                    const leftEl = leftChildren[i];
-                    const rightEl = rightChildren[i];
-
-                    const isDiff = (leftEl && leftEl.classList.contains('diff-removed')) ||
-                        (rightEl && rightEl.classList.contains('diff-added'));
+                for (let i = 0; i < alignedLinesData.length; i++) {
+                    const row = alignedLinesData[i];
+                    const isDiff = row.type !== 'same';
 
                     if (isDiff) {
                         if (!inBlock) {
-                            blocks.push({
-                                element: leftEl && leftEl.classList.contains('diff-removed') ? leftEl : rightEl,
-                                index: i
-                            });
+                            currentBlock = {
+                                startIndex: i,
+                                endIndex: i,
+                                type: row.type
+                            };
+                            diffBlocks.push(currentBlock);
                             inBlock = true;
+                        } else {
+                            currentBlock.endIndex = i;
                         }
                     } else {
                         inBlock = false;
                     }
                 }
-                return blocks;
             }
 
-            function updateDiffCounter() {
-                const blocks = getDiffBlocks();
-                const counter = document.getElementById('diffCounter');
-                if (blocks.length > 0 && currentBlockIndex >= 0) {
-                    counter.value = `${currentBlockIndex + 1}/${blocks.length}`;
+            function initDiffNavigation() {
+                buildDiffBlocks();
+                currentDiffIndex = -1;
+
+                if (diffBlocks.length > 0) {
+                    diffNavDock.classList.add('visible');
+                    updateDiffCounter();
+                    // Auto-select first diff
+                    jumpToDiff(0);
                 } else {
-                    counter.value = `0/${blocks.length}`;
+                    diffNavDock.classList.remove('visible');
+                    updateDiffCounter();
                 }
             }
 
-            // Handle direct jump via counter input
-            const diffCounter = document.getElementById('diffCounter');
+            function updateDiffCounter() {
+                if (diffBlocks.length > 0 && currentDiffIndex >= 0) {
+                    diffCounter.value = `${currentDiffIndex + 1} / ${diffBlocks.length}`;
+                } else {
+                    diffCounter.value = `0 / ${diffBlocks.length}`;
+                }
+            }
+
+            function jumpToDiff(index) {
+                if (index < 0 || index >= diffBlocks.length) return;
+                currentDiffIndex = index;
+
+                // Clear previous active highlights
+                document.querySelectorAll('.diff-active').forEach(el => el.classList.remove('diff-active'));
+
+                const block = diffBlocks[currentDiffIndex];
+                const targetRowIdx = block.startIndex;
+
+                const leftRow = document.getElementById(`diffRowLeft-${targetRowIdx}`);
+                const rightRow = document.getElementById(`diffRowRight-${targetRowIdx}`);
+
+                if (leftRow) leftRow.classList.add('diff-active');
+                if (rightRow) rightRow.classList.add('diff-active');
+
+                // Smooth scroll into center view
+                const activeEl = leftRow || rightRow;
+                if (activeEl) {
+                    activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                updateDiffCounter();
+                updateMinimapSlider();
+            }
+
+            prevDiffBtn.addEventListener('click', () => {
+                if (diffBlocks.length === 0) return;
+                let nextIdx = currentDiffIndex - 1;
+                if (nextIdx < 0) nextIdx = diffBlocks.length - 1;
+                jumpToDiff(nextIdx);
+            });
+
+            nextDiffBtn.addEventListener('click', () => {
+                if (diffBlocks.length === 0) return;
+                let nextIdx = currentDiffIndex + 1;
+                if (nextIdx >= diffBlocks.length) nextIdx = 0;
+                jumpToDiff(nextIdx);
+            });
+
+            firstDiffBtn.addEventListener('click', () => {
+                if (diffBlocks.length > 0) jumpToDiff(0);
+            });
+
+            lastDiffBtn.addEventListener('click', () => {
+                if (diffBlocks.length > 0) jumpToDiff(diffBlocks.length - 1);
+            });
+
             diffCounter.addEventListener('click', function () {
                 this.readOnly = false;
                 this.select();
@@ -1016,82 +2429,457 @@
 
             diffCounter.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
-                    const blocks = getDiffBlocks();
-                    const input = this.value.trim();
-                    const num = parseInt(input);
-
-                    if (!isNaN(num) && num >= 1 && num <= blocks.length) {
-                        currentBlockIndex = num - 1;
-
-                        // Remove previous highlight
-                        document.querySelectorAll('.diff-line-active').forEach(el => el.classList.remove('diff-line-active'));
-
-                        // Add highlight to target block
-                        blocks[currentBlockIndex].element.classList.add('diff-line-active');
-
-                        blocks[currentBlockIndex].element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        updateDiffCounter();
+                    const val = parseInt(this.value.trim());
+                    if (!isNaN(val) && val >= 1 && val <= diffBlocks.length) {
+                        jumpToDiff(val - 1);
                     }
-
                     this.blur();
                 }
             });
 
-            document.getElementById('prevDiffBtn').addEventListener('click', () => {
-                const blocks = getDiffBlocks();
-                if (currentBlockIndex > 0) {
-                    currentBlockIndex--;
-                } else if (currentBlockIndex === -1 && blocks.length > 0) {
-                    currentBlockIndex = blocks.length - 1;
+            // ----------------------------------------------------
+            // Beyond Compare Vertical Thumbnail Overview (Minimap)
+            // ----------------------------------------------------
+            function renderMinimap() {
+                const total = alignedLinesData.length;
+                if (total === 0) return;
+
+                const ctx = minimapCanvas.getContext('2d');
+                const width = diffMinimap.clientWidth || 22;
+                const height = diffMinimap.clientHeight || 400;
+
+                minimapCanvas.width = width;
+                minimapCanvas.height = height;
+
+                ctx.clearRect(0, 0, width, height);
+
+                const lineH = Math.max(1, height / total);
+
+                for (let i = 0; i < total; i++) {
+                    const row = alignedLinesData[i];
+                    const y = (i / total) * height;
+
+                    if (row.type === 'added') {
+                        ctx.fillStyle = '#10b981';
+                        ctx.fillRect(0, y, width, lineH);
+                    } else if (row.type === 'removed') {
+                        ctx.fillStyle = '#ef4444';
+                        ctx.fillRect(0, y, width, lineH);
+                    } else if (row.type === 'modified') {
+                        ctx.fillStyle = row.isUnimportant ? '#3b82f6' : '#f59e0b';
+                        ctx.fillRect(0, y, width, lineH);
+                    }
                 }
 
-                if (currentBlockIndex >= 0 && currentBlockIndex < blocks.length) {
-                    // Remove previous highlight
-                    document.querySelectorAll('.diff-line-active').forEach(el => el.classList.remove('diff-line-active'));
+                updateMinimapSlider();
+            }
 
-                    // Add highlight to current block
-                    blocks[currentBlockIndex].element.classList.add('diff-line-active');
+            function updateMinimapSlider() {
+                const scrollHeight = panesContainer.scrollHeight;
+                const clientHeight = panesContainer.clientHeight;
+                const scrollTop = panesContainer.scrollTop;
+                const minimapHeight = diffMinimap.clientHeight;
 
-                    blocks[currentBlockIndex].element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    updateDiffCounter();
+                if (scrollHeight <= clientHeight) {
+                    minimapSlider.style.height = '100%';
+                    minimapSlider.style.top = '0';
+                    return;
+                }
+
+                const sliderHeight = Math.max(16, (clientHeight / scrollHeight) * minimapHeight);
+                const sliderTop = (scrollTop / (scrollHeight - clientHeight)) * (minimapHeight - sliderHeight);
+
+                minimapSlider.style.height = `${sliderHeight}px`;
+                minimapSlider.style.top = `${sliderTop}px`;
+            }
+
+            diffMinimap.addEventListener('click', (e) => {
+                const rect = diffMinimap.getBoundingClientRect();
+                const clickY = e.clientY - rect.top;
+                const ratio = clickY / rect.height;
+
+                const scrollTarget = ratio * (panesContainer.scrollHeight - panesContainer.clientHeight);
+                panesContainer.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+            });
+
+            // ----------------------------------------------------
+            // Synchronized Scrolling (Dual Panes Lockstep)
+            // ----------------------------------------------------
+            let isSyncingScroll = false;
+            panesContainer.addEventListener('scroll', () => {
+                if (!isSyncingScroll) {
+                    requestAnimationFrame(updateMinimapSlider);
                 }
             });
 
-            document.getElementById('nextDiffBtn').addEventListener('click', () => {
-                const blocks = getDiffBlocks();
-                if (currentBlockIndex < blocks.length - 1) {
-                    currentBlockIndex++;
-                } else if (currentBlockIndex === -1 && blocks.length > 0) {
-                    currentBlockIndex = 0;
-                }
+            // ----------------------------------------------------
+            // Display Filter Buttons (Show All / Diffs / Same / Context)
+            // ----------------------------------------------------
+            displayFilterGroup.querySelectorAll('.segmented-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    displayFilterGroup.querySelectorAll('.segmented-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
 
-                if (currentBlockIndex >= 0 && currentBlockIndex < blocks.length) {
-                    // Remove previous highlight
-                    document.querySelectorAll('.diff-line-active').forEach(el => el.classList.remove('diff-line-active'));
+                    currentFilter = this.dataset.filter;
 
-                    // Add highlight to current block
-                    blocks[currentBlockIndex].element.classList.add('diff-line-active');
+                    // Show or hide context select dropdown
+                    if (currentFilter === 'context') {
+                        contextLinesSelect.style.display = 'inline-block';
+                    } else {
+                        contextLinesSelect.style.display = 'none';
+                    }
 
-                    blocks[currentBlockIndex].element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (alignedLinesData.length > 0) {
+                        renderAlignedDiff();
+                        buildDiffBlocks();
+                        updateDiffCounter();
+                        renderMinimap();
+                    }
+                });
+            });
+
+            contextLinesSelect.addEventListener('change', function () {
+                contextLines = parseInt(this.value);
+                if (currentFilter === 'context' && alignedLinesData.length > 0) {
+                    renderAlignedDiff();
+                    buildDiffBlocks();
                     updateDiffCounter();
+                    renderMinimap();
                 }
             });
 
-            // Observer to detect when diff results are populated
-            const observer = new MutationObserver((mutations) => {
-                currentBlockIndex = -1;
-                const blocks = getDiffBlocks();
-                if (blocks.length > 0) {
-                    diffNav.classList.add('visible');
-                    updateDiffCounter();
+            // ----------------------------------------------------
+            // View Mode Selector (Side-by-Side vs Inline)
+            // ----------------------------------------------------
+            viewModeGroup.querySelectorAll('.segmented-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    viewModeGroup.querySelectorAll('.segmented-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    currentViewMode = this.dataset.mode;
+                    if (currentViewMode === 'inline') {
+                        diffViewerWrapper.classList.add('inline-mode');
+                    } else {
+                        diffViewerWrapper.classList.remove('inline-mode');
+                    }
+                    renderMinimap();
+                });
+            });
+
+            // ----------------------------------------------------
+            // Swap Sides & Synchronization Commands
+            // ----------------------------------------------------
+            swapSidesBtn.addEventListener('click', () => {
+                const temp = originalInput.value;
+                originalInput.value = modifiedInput.value;
+                modifiedInput.value = temp;
+
+                updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
+                updateInputLineNumbers(modifiedInput, linesModified, rightStatsBadge);
+
+                showToast("Swapped Left and Right configurations", "info");
+
+                if (originalInput.value || modifiedInput.value) {
+                    executeCompare();
+                }
+            });
+
+            document.getElementById('takeLeftToRightBtn').addEventListener('click', () => {
+                modifiedInput.value = originalInput.value;
+                updateInputLineNumbers(modifiedInput, linesModified, rightStatsBadge);
+                showToast("Copied Left -> Right (Synced)", "success");
+                executeCompare();
+            });
+
+            document.getElementById('takeRightToLeftBtn').addEventListener('click', () => {
+                originalInput.value = modifiedInput.value;
+                updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
+                showToast("Copied Right -> Left (Synced)", "success");
+                executeCompare();
+            });
+
+            // ----------------------------------------------------
+            // Export / Patch Copy
+            // ----------------------------------------------------
+            copyPatchBtn.addEventListener('click', () => {
+                if (!lastPatchText) {
+                    showToast("No patch data to copy", "warning");
+                    return;
+                }
+                navigator.clipboard.writeText(lastPatchText).then(() => {
+                    showToast("Unified patch copied to clipboard", "success");
+                }).catch(() => {
+                    showToast("Failed to copy patch", "warning");
+                });
+            });
+
+            // ----------------------------------------------------
+            // Toggle Inputs Panel (Collapsible view for focus)
+            // ----------------------------------------------------
+            toggleInputsBtn.addEventListener('click', () => {
+                inputsGrid.classList.toggle('collapsed');
+                const isCollapsed = inputsGrid.classList.contains('collapsed');
+                toggleInputsText.textContent = isCollapsed ? 'Show Inputs' : 'Hide Inputs';
+            });
+
+            // ----------------------------------------------------
+            // Clear Buttons
+            // ----------------------------------------------------
+            document.getElementById('clearLeftBtn').addEventListener('click', () => {
+                originalInput.value = '';
+                updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
+            });
+
+            document.getElementById('clearRightBtn').addEventListener('click', () => {
+                modifiedInput.value = '';
+                updateInputLineNumbers(modifiedInput, linesModified, rightStatsBadge);
+            });
+
+            clearAllBtn.addEventListener('click', () => {
+                originalInput.value = '';
+                modifiedInput.value = '';
+                updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
+                updateInputLineNumbers(modifiedInput, linesModified, rightStatsBadge);
+
+                diffViewerWrapper.style.display = 'none';
+                summaryBar.style.display = 'none';
+                diffNavDock.classList.remove('visible');
+                diffLeft.innerHTML = '';
+                diffRight.innerHTML = '';
+                alignedLinesData = [];
+                diffBlocks = [];
+                showToast("Cleared all inputs and results", "info");
+            });
+
+            // ----------------------------------------------------
+            // Rules Modal Management
+            // ----------------------------------------------------
+            rulesBtn.addEventListener('click', () => {
+                rulesModal.classList.add('show');
+            });
+
+            closeRulesModalBtn.addEventListener('click', () => {
+                rulesModal.classList.remove('show');
+            });
+
+            rulesModal.addEventListener('click', (e) => {
+                if (e.target === rulesModal) {
+                    rulesModal.classList.remove('show');
+                }
+            });
+
+            resetRulesBtn.addEventListener('click', () => {
+                ruleIgnoreLeadingSpace.checked = true;
+                ruleIgnoreTrailingSpace.checked = true;
+                ruleIgnoreAllSpace.checked = false;
+                ruleIgnoreCase.checked = false;
+                ruleIgnoreBlankLines.checked = true;
+                ruleIgnoreComments.checked = true;
+                ruleIgnoreTimestamps.checked = true;
+                ruleIgnoreUnimportant.checked = true;
+                showToast("Reset rules to default", "info");
+            });
+
+            applyRulesBtn.addEventListener('click', () => {
+                rulesModal.classList.remove('show');
+                showToast("Applied rules & re-comparing", "success");
+                executeCompare();
+            });
+
+            // ----------------------------------------------------
+            // Clipboard Paste Handlers
+            // ----------------------------------------------------
+            document.getElementById('pasteLeftBtn').addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    originalInput.value = text;
+                    updateInputLineNumbers(originalInput, linesOriginal, leftStatsBadge);
+                    showToast("Pasted into Left pane", "info");
+                } catch (e) {
+                    showToast("Clipboard access denied. Please paste manually.", "warning");
+                }
+            });
+
+            document.getElementById('pasteRightBtn').addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    modifiedInput.value = text;
+                    updateInputLineNumbers(modifiedInput, linesModified, rightStatsBadge);
+                    showToast("Pasted into Right pane", "info");
+                } catch (e) {
+                    showToast("Clipboard access denied. Please paste manually.", "warning");
+                }
+            });
+
+            // ----------------------------------------------------
+            // File Upload Handlers
+            // ----------------------------------------------------
+            const fileInputLeft = document.getElementById('fileInputLeft');
+            const fileInputRight = document.getElementById('fileInputRight');
+
+            document.getElementById('uploadLeftBtn').addEventListener('click', () => fileInputLeft.click());
+            document.getElementById('uploadRightBtn').addEventListener('click', () => fileInputRight.click());
+
+            fileInputLeft.addEventListener('change', (e) => handleFileInput(e, originalInput, linesOriginal, leftStatsBadge));
+            fileInputRight.addEventListener('change', (e) => handleFileInput(e, modifiedInput, linesModified, rightStatsBadge));
+
+            function handleFileInput(e, textarea, linesEl, badgeEl) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    textarea.value = evt.target.result;
+                    updateInputLineNumbers(textarea, linesEl, badgeEl);
+                    showToast(`Loaded ${file.name}`, "info");
+                };
+                reader.readAsText(file);
+                e.target.value = ''; // Reset input
+            }
+
+            // ----------------------------------------------------
+            // Drag and Drop Logic
+            // ----------------------------------------------------
+            function enableDragAndDrop(textareaId, wrapperId, linesId, badgeId) {
+                const textarea = document.getElementById(textareaId);
+                const wrapper = document.getElementById(wrapperId);
+                const linesEl = document.getElementById(linesId);
+                const badgeEl = document.getElementById(badgeId);
+
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+                    wrapper.addEventListener(evt, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, false);
+                });
+
+                ['dragenter', 'dragover'].forEach(evt => {
+                    wrapper.addEventListener(evt, () => wrapper.classList.add('drag-over'), false);
+                });
+
+                ['dragleave', 'drop'].forEach(evt => {
+                    wrapper.addEventListener(evt, () => wrapper.classList.remove('drag-over'), false);
+                });
+
+                wrapper.addEventListener('drop', (e) => {
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        const reader = new FileReader();
+                        reader.onload = (evt) => {
+                            textarea.value = evt.target.result;
+                            updateInputLineNumbers(textarea, linesEl, badgeEl);
+                            showToast(`Loaded file: ${file.name}`, "info");
+                        };
+                        reader.readAsText(file);
+                    }
+                }, false);
+            }
+
+            // ----------------------------------------------------
+            // Line Numbers & Stats Sync
+            // ----------------------------------------------------
+            function updateInputLineNumbers(textarea, linesEl, badgeEl) {
+                const text = textarea.value;
+                const count = text ? text.split('\n').length : 1;
+                const chars = text.length;
+
+                if (linesEl.childElementCount !== count) {
+                    linesEl.innerHTML = Array(count).fill(0).map((_, i) => `<div>${i + 1}</div>`).join('');
+                }
+
+                if (badgeEl) {
+                    badgeEl.textContent = `${count} lines (${chars} chars)`;
+                }
+            }
+
+            function setupLineNumbers(textareaId, linesId, badgeId) {
+                const textarea = document.getElementById(textareaId);
+                const linesEl = document.getElementById(linesId);
+                const badgeEl = document.getElementById(badgeId);
+
+                textarea.addEventListener('input', () => updateInputLineNumbers(textarea, linesEl, badgeEl));
+                textarea.addEventListener('scroll', () => {
+                    linesEl.scrollTop = textarea.scrollTop;
+                });
+
+                updateInputLineNumbers(textarea, linesEl, badgeEl);
+            }
+
+            enableDragAndDrop('original', 'wrapperLeft', 'linesOriginal', 'leftStatsBadge');
+            enableDragAndDrop('modified', 'wrapperRight', 'linesModified', 'rightStatsBadge');
+            setupLineNumbers('original', 'linesOriginal', 'leftStatsBadge');
+            setupLineNumbers('modified', 'linesModified', 'rightStatsBadge');
+
+            // ----------------------------------------------------
+            // Compare Button Trigger
+            // ----------------------------------------------------
+            compareBtn.addEventListener('click', executeCompare);
+
+            // ----------------------------------------------------
+            // Keyboard Shortcuts (Beyond Compare navigation)
+            // ----------------------------------------------------
+            window.addEventListener('keydown', (e) => {
+                // Ctrl + Enter: Compare
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    executeCompare();
+                }
+                // Alt + S: Swap Sides
+                else if (e.altKey && (e.key === 's' || e.key === 'S')) {
+                    e.preventDefault();
+                    swapSidesBtn.click();
+                }
+                // Alt + Down or 'n' / 'N' when not in textarea: Next Difference
+                else if ((e.altKey && e.key === 'ArrowDown') ||
+                    (document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT' && (e.key === 'n' || e.key === 'N'))) {
+                    e.preventDefault();
+                    nextDiffBtn.click();
+                }
+                // Alt + Up or 'p' / 'P' when not in textarea: Prev Difference
+                else if ((e.altKey && e.key === 'ArrowUp') ||
+                    (document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT' && (e.key === 'p' || e.key === 'P'))) {
+                    e.preventDefault();
+                    prevDiffBtn.click();
+                }
+                // Escape: Close Modal
+                else if (e.key === 'Escape') {
+                    rulesModal.classList.remove('show');
+                }
+            });
+
+            // Window resize: recompute minimap
+            window.addEventListener('resize', () => {
+                if (alignedLinesData.length > 0) {
+                    renderMinimap();
+                }
+            });
+
+            // ----------------------------------------------------
+            // Toast Utility
+            // ----------------------------------------------------
+            let toastTimer = null;
+            function showToast(message, type = 'info') {
+                const toast = document.getElementById('toast');
+                const toastMessage = document.getElementById('toastMessage');
+                const toastIcon = document.getElementById('toastIcon');
+
+                toast.className = `toast ${type} show`;
+                toastMessage.textContent = message;
+
+                if (type === 'success') {
+                    toastIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+                } else if (type === 'warning') {
+                    toastIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
                 } else {
-                    diffNav.classList.remove('visible');
+                    toastIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
                 }
-            });
 
-            observer.observe(document.getElementById('resultLeft'), { childList: true });
+                if (toastTimer) clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3200);
+            }
         });
-
     </script>
 </body>
 
