@@ -1,83 +1,21 @@
 # Network Tools Suite
 
-A professional, modern, and responsive suite of networking utilities designed for network engineers and system administrators. This project features a centralized architecture with a consistent UI/UX, dark/light mode support, and purely client-side execution for security and speed.
-
-## 🚀 Features
-
-*   **Centralized Architecture**: Shared CSS and JavaScript resources for consistent styling and behavior across all tools.
-*   **Modern UI/UX**: clean, card-based interface with glassmorphism effects and smooth animations.
-*   **Theme Support**: Built-in Dark and Light modes with automatic persistence.
-*   **Responsive Design**: Fully optimized for desktops, tablets, and mobile devices.
-*   **Client-Side Only**: All processing happens in the browser. No data is sent to any server, ensuring privacy and security.
-
-## 🛠️ Included Tools
-
-1.  **MAC Address Converter**
-    *   Convert MAC addresses between various formats (Cisco, Windows, Linux, etc.) in real-time.
-    *   Supports bulk processing.
-
-2.  **MAC Vendor Lookup**
-    *   Identify device manufacturers from MAC addresses using an OUI database.
-
-3.  **Subnet Calculator**
-    *   Calculate IPv4/IPv6 subnet details, including network address, broadcast address, and host ranges.
-
-4.  **Subnet Converter**
-    *   Convert between Subnet Mask, CIDR notation, and Wildcard Masks.
-    *   Supports bulk conversion.
-
-5.  **VPN WAN Finder**
-    *   Analyze router output to discover available WAN IP addresses.
-    *   includes verification command generation.
-
-6.  **Port Queue Check**
-    *   Analyze and filter router configuration to check port queue status.
-
-7.  **Text Filter**
-    *   Filter text lines based on "Include" and "Exclude" keywords.
-    *   Useful for parsing log files or configuration dumps.
-
-8.  **Script Generator**
-    *   Generate configuration scripts for network devices.
-
-9.  **Configuration Compare**
-    *   Compare two text configurations side-by-side with intelligent difference highlighting.
-    *   Features advanced navigation (Previous/Next diff buttons with jump-to capability).
-    *   Compact mode to show only differences while retaining context.
-    *   Visual diff highlighting with line numbers and toast notifications.
-
-10. **Ping Parser**
-    *   Parse Windows/Linux ping results to extract IP and Loss %.
-    *   Support mixed output formats.
-
-11. **BNG GW Ping/Traceroute**
-    *   Paste BNG device output to auto-detect the device node number and select matching odd/even gateway IP pools.
-    *   Generates `ping` or `tracert` commands per matched pool.
-    *   Supports GW IP filtering: All, Private IP (RFC1918 + CGNAT), or Public IP.
-    *   Run Mode selector: Trace (default) or Ping.
-
-## 🗂️ Versioning
-
-Every tool carries its own SemVer (`MAJOR.MINOR.PATCH`) badge in its header, and the hub shows a version chip on each tool card. The single source of truth is [`assets/js/version.js`](assets/js/version.js) — bump the tool entry there whenever you change that tool, and bump `suite` when shared assets change.
-
-**Current versions (2026-10-15, Suite v1.2.0):**
-
-| File | Version | Notes |
+A professional, modern, and responsive suite of networking utilities designed for network engineers and system administrators1.0.1 Self-hosted fonts, offline-ready assets (glass via shared theme) | File | Version | Notes |
 |---|---|---|
-| `compare.html` | v3.1.1 | Multi-strategy diff engine: section splitting, hierarchical config blocks, key-based tables (ARP/MAC/route/BGP/OSPF/interface), noise masking, sanity dashboard, word wrap, filter-count pills |
-| `subnet_calculator.html` | v1.2.0 | IPv6 usable-host range & boundary checks; self-hosted fonts |
-| `index.html` | v1.2.0 | Per-tool version chips on the hub; self-hosted fonts |
+| `compare.html` | v3.2.0 | Multi-strategy diff engine: section splitting, hierarchical config blocks, key-based tables (ARP/MAC/route/BGP/OSPF/interface), noise masking, sanity dashboard, word wrap, filter-count pills |
+| `subnet_calculator.html` | v1.3.0 | Liquid glass component styling; self-hosted fonts |
+| `index.html` | v1.3.0 | Per-tool version chips on the hub; self-hosted fonts; Subnet Verify external card |
 | `mac_vender.html` | v1.1.0 | Clearer offline/file:// guidance (start-server.bat); self-hosted fonts |
-| `bng_gw_pingtrace.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
-| `mac_converter.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
-| `ping_result.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
-| `portqueue.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
-| `script.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
-| `subnet_converter.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
-| `text_filter.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
-| `wan.html` | v1.0.1 | Self-hosted fonts, offline-ready assets |
+| `bng_gw_pingtrace.html` | v1.1.0 | Liquid glass component styling; self-hosted fonts |
+| `mac_converter.html` | v1.1.0 | Liquid glass component styling; self-hosted fonts |
+| `ping_result.html` | v1.1.0 | Liquid glass component styling; self-hosted fonts |
+| `portqueue.html` | v1.1.0 | Liquid glass component styling; self-hosted fonts |
+| `script.html` | v1.0.2 | Comfortable action-button padding; self-hosted fonts, offline-ready assets (glass via shared theme) |
+| `subnet_converter.html` | v1.1.0 | Liquid glass component styling; self-hosted fonts |
+| `text_filter.html` | v1.1.0 | Liquid glass component styling; self-hosted fonts |
+| `wan.html` | v1.1.0 | Liquid glass component styling; self-hosted fonts |
 
-Shared assets: `common.css` v1.2.0 • `fonts.css` v1.0.0 • `theme.js` v1.0.0 • `ip-utils.js` v1.1.0 • vendored `diff.min.js` v5.2.0
+Shared assets: `common.css` v1.3.0 (liquid glass design system) • `fonts.css` v1.0.0 • `theme.js` v1.0.0 • `ip-utils.js` v1.1.0 • vendored `diff.min.js` v5.2.0
 
 ## 📦 Project Structure
 

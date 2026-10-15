@@ -1842,6 +1842,235 @@
                 right: 1rem;
             }
         }
+
+        /* ========================================================
+           LIQUID GLASS - page components (compare.html)
+           ======================================================== */
+
+        /* Control card + input cards */
+        .card,
+        .input-card {
+            background-color: var(--glass-bg);
+            background-image: var(--glass-sheen);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-rim), inset 0 -1px 0 var(--glass-rim-soft);
+        }
+
+        /* Editor panes sit on stronger glass for text readability */
+        .input-wrapper {
+            background: var(--glass-bg-strong);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border);
+            box-shadow: inset 0 1px 0 var(--glass-rim-soft), inset 0 -1px 0 var(--glass-rim-soft);
+        }
+
+        .input-wrapper:focus-within {
+            border-color: rgba(249, 115, 22, 0.55);
+            box-shadow: inset 0 1px 0 var(--glass-rim-soft), 0 0 0 3px rgba(249, 115, 22, 0.16);
+        }
+
+        /* Summary bar */
+        .diff-summary-bar {
+            background-color: var(--glass-bg);
+            background-image: var(--glass-sheen);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-rim), inset 0 -1px 0 var(--glass-rim-soft);
+        }
+
+        .stat-pill,
+        .version-badge {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px) saturate(140%);
+            -webkit-backdrop-filter: blur(10px) saturate(140%);
+        }
+
+        /* Segmented groups become glass capsules */
+        .segmented-group {
+            background: rgba(255, 255, 255, 0.055);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border);
+            border-radius: 9999px;
+            box-shadow: inset 0 1px 0 var(--glass-rim-soft), 0 8px 22px -14px rgba(0, 0, 0, 0.5);
+        }
+
+        .segmented-btn.active {
+            background: rgba(255, 255, 255, 0.13) !important;
+            backdrop-filter: blur(14px) saturate(150%);
+            -webkit-backdrop-filter: blur(14px) saturate(150%);
+            color: var(--text-main) !important;
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: inset 0 1px 0 var(--glass-rim), 0 2px 10px rgba(0, 0, 0, 0.28) !important;
+        }
+
+        /* Toolbar buttons */
+        .controls .btn-secondary {
+            background: rgba(255, 255, 255, 0.065) !important;
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: inset 0 1px 0 var(--glass-rim-soft), 0 8px 22px -14px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .controls .btn-secondary:hover {
+            background: rgba(249, 115, 22, 0.14) !important;
+            border-color: rgba(249, 115, 22, 0.55) !important;
+        }
+
+        #compareBtn {
+            background-image: linear-gradient(135deg, rgba(52, 211, 153, 0.82), rgba(5, 150, 105, 0.82)) !important;
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid rgba(255, 255, 255, 0.22) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), 0 10px 26px -10px rgba(16, 185, 129, 0.55) !important;
+        }
+
+        /* Summary action buttons */
+        .summary-actions .btn-summary-action {
+            background: rgba(255, 255, 255, 0.06) !important;
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: inset 0 1px 0 var(--glass-rim-soft) !important;
+        }
+
+        .summary-actions .btn-summary-action:hover {
+            background: rgba(249, 115, 22, 0.14) !important;
+        }
+
+        .summary-actions .btn-summary-action.active {
+            background: rgba(249, 115, 22, 0.2) !important;
+            border-color: rgba(249, 115, 22, 0.55) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 14px -6px rgba(249, 115, 22, 0.45) !important;
+        }
+
+        .context-select {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border);
+            border-radius: 9999px;
+        }
+
+        .context-select option {
+            background: #14171f;
+            color: var(--text-main);
+        }
+
+        /* Diff viewer shell */
+        .diff-viewer-wrapper {
+            background-color: var(--glass-bg-strong);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-rim), inset 0 -1px 0 var(--glass-rim-soft);
+        }
+
+        .diff-viewer-header {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* Sticky section bands become frosted glass */
+        .diff-row.section-band {
+            background: linear-gradient(0deg, var(--glass-bg-strong), var(--glass-bg-strong));
+            backdrop-filter: blur(14px) saturate(150%);
+            -webkit-backdrop-filter: blur(14px) saturate(150%);
+        }
+
+        .diff-row.section-band.band-removed {
+            background: linear-gradient(0deg, rgba(220, 38, 38, 0.24), rgba(220, 38, 38, 0.24));
+        }
+
+        .diff-minimap {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Sanity dashboard */
+        .sanity-card {
+            background-color: var(--glass-bg);
+            background-image: var(--glass-sheen);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-rim), inset 0 -1px 0 var(--glass-rim-soft);
+        }
+
+        .sanity-card-header {
+            background: rgba(255, 255, 255, 0.045);
+        }
+
+        /* Floating nav dock */
+        .diff-nav-dock {
+            background: var(--glass-bg-strong);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-rim);
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            backdrop-filter: blur(14px) saturate(130%);
+            -webkit-backdrop-filter: blur(14px) saturate(130%);
+            background: rgba(2, 4, 10, 0.55);
+        }
+
+        [data-theme="light"] .modal-backdrop {
+            background: rgba(226, 232, 240, 0.55);
+        }
+
+        .modal-dialog {
+            background-color: var(--glass-bg-strong);
+            background-image: var(--glass-sheen);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-rim);
+        }
+
+        .rule-group {
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid var(--glass-border);
+            box-shadow: inset 0 1px 0 var(--glass-rim-soft);
+        }
+
+        .btn-modal-secondary {
+            background: rgba(255, 255, 255, 0.07) !important;
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border) !important;
+        }
+
+        .btn-modal-primary {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.8)) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+        }
+
+        /* Theme toggle becomes a glass orb */
+        button.theme-toggle,
+        .theme-toggle,
+        #themeBtn {
+            background: rgba(255, 255, 255, 0.07) !important;
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: inset 0 1px 0 var(--glass-rim) !important;
+        }
     </style>
 </head>
 
@@ -1982,7 +2211,7 @@
 
                 <span class="control-divider"></span>
 
-                <button id="clearAllBtn" class="btn-secondary" title="Clear all text and reset" style="background-image: linear-gradient(135deg, #f87171, #b91c1c) !important; color: white !important; border: none !important;">
+                <button id="clearAllBtn" class="btn-secondary" title="Clear all text and reset" style="background-image: linear-gradient(135deg, rgba(248, 113, 113, 0.75), rgba(153, 27, 27, 0.75)) !important; color: white !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; backdrop-filter: blur(14px) saturate(150%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px -10px rgba(239, 68, 68, 0.5);">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 6h18"/>

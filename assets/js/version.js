@@ -21,23 +21,23 @@
  */
 
 const TOOL_VERSIONS = {
-    suite: { version: '1.2.0', date: '2026-10-15', name: 'Network Tools Suite' },
+    suite: { version: '1.3.0', date: '2026-10-15', name: 'Network Tools Suite' },
 
-    'index.html':             { version: '1.2.0', date: '2026-10-15', name: 'Tools Hub' },
-    'compare.html':           { version: '3.1.1', date: '2026-10-15', name: 'Network Pre/Post-Check Diff' },
-    'bng_gw_pingtrace.html':  { version: '1.0.1', date: '2026-10-15', name: 'BNG GW Ping/Traceroute' },
-    'mac_converter.html':     { version: '1.0.1', date: '2026-10-15', name: 'MAC Address Converter' },
+    'index.html':             { version: '1.3.0', date: '2026-10-15', name: 'Tools Hub' },
+    'compare.html':           { version: '3.2.0', date: '2026-10-15', name: 'Network Pre/Post-Check Diff' },
+    'bng_gw_pingtrace.html':  { version: '1.1.0', date: '2026-10-15', name: 'BNG GW Ping/Traceroute' },
+    'mac_converter.html':     { version: '1.1.0', date: '2026-10-15', name: 'MAC Address Converter' },
     'mac_vender.html':        { version: '1.1.0', date: '2026-10-15', name: 'MAC Vendor Lookup' },
-    'ping_result.html':       { version: '1.0.1', date: '2026-10-15', name: 'Ping Result Parser' },
-    'portqueue.html':         { version: '1.0.1', date: '2026-10-15', name: 'Port Queue Check' },
-    'script.html':            { version: '1.0.1', date: '2026-10-15', name: 'Script Generator' },
-    'subnet_calculator.html': { version: '1.2.0', date: '2026-10-15', name: 'Subnet Calculator' },
-    'subnet_converter.html':  { version: '1.0.1', date: '2026-10-15', name: 'Subnet Converter' },
-    'text_filter.html':       { version: '1.0.1', date: '2026-10-15', name: 'Text Filter' },
-    'wan.html':               { version: '1.0.1', date: '2026-10-15', name: 'VPN WAN Finder' },
+    'ping_result.html':       { version: '1.1.0', date: '2026-10-15', name: 'Ping Result Parser' },
+    'portqueue.html':         { version: '1.1.0', date: '2026-10-15', name: 'Port Queue Check' },
+    'script.html':            { version: '1.0.2', date: '2026-10-15', name: 'Script Generator' },
+    'subnet_calculator.html': { version: '1.3.0', date: '2026-10-15', name: 'Subnet Calculator' },
+    'subnet_converter.html':  { version: '1.1.0', date: '2026-10-15', name: 'Subnet Converter' },
+    'text_filter.html':       { version: '1.1.0', date: '2026-10-15', name: 'Text Filter' },
+    'wan.html':               { version: '1.1.0', date: '2026-10-15', name: 'VPN WAN Finder' },
 
     // Shared assets (informational - bumped when the shared file changes)
-    'assets/styles/common.css': { version: '1.2.0', date: '2026-10-15' },
+    'assets/styles/common.css': { version: '1.3.0', date: '2026-10-15' },
     'assets/styles/fonts.css':  { version: '1.0.0', date: '2026-10-15' },
     'assets/js/theme.js':       { version: '1.0.0', date: '2026-01-10' },
     'assets/js/ip-utils.js':    { version: '1.1.0', date: '2026-10-15' },
