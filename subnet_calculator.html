@@ -15,17 +15,16 @@
     <style>
         /* Page-specific styles */
         .nav-buttons {
-            display: flex;
+            display: none;
             gap: 0.75rem;
             margin-top: 1.5rem;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s ease;
         }
 
         .nav-buttons.visible {
-            opacity: 1;
-            pointer-events: auto;
+            display: flex;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: slideUpFade 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         .nav-btn {
@@ -147,7 +146,7 @@
 
             <div id="results" class="results"></div>
 
-            <div id="nav-buttons" class="nav-buttons hidden">
+            <div id="nav-buttons" class="nav-buttons">
                 <button id="prev-btn" class="nav-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
